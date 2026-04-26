@@ -32,7 +32,7 @@ RUN APP_ENV=prod composer install \
 
 COPY . .
 
-RUN APP_ENV=prod php bin/console cache:warmup --no-debug \
+RUN mkdir -p var/cache var/log \
     && chown -R www-data:www-data var/
 
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
@@ -42,6 +42,8 @@ RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
 
 COPY docker/nginx-railway.conf /etc/nginx/http.d/default.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/entrypoint.sh"]
