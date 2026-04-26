@@ -1,0 +1,226 @@
+/* ============================================================
+   DESIGN TOKENS — TFGdaw  ·  Lumina Library  (Dark Theme)
+   Deep Nocturnal Violet — Glassmorphism Edition
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap');
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES
+   ============================================================ */
+
+:root {
+  /* ── Primary violet ── */
+  --color-primary:        #7c3aed;
+  --color-primary-hover:  #8b4cf6;
+  --color-primary-dark:   #3f008e;
+  --color-accent:         #d2bbff;
+  --color-accent-hover:   #c0a8ff;
+
+  /* ── Secondary / tertiary (replaces cyan) ── */
+  --color-cyan:           #c0c1ff;
+  --color-cyan-hover:     #a8aaf0;
+  --color-cyan-light:     #e5e3ff;
+  --color-cyan-pale:      #e1e0ff;
+  --color-cyan-bg:        rgba(82,84,223,0.15);
+
+  /* ── Error / rose (dark-theme safe) ── */
+  --color-rose:           #ffb4ab;
+  --color-rose-hover:     #ff8a80;
+  --color-rose-light:     #ffdad6;
+  --color-rose-pale:      rgba(147,0,10,0.25);
+  --color-rose-bg:        rgba(147,0,10,0.18);
+
+  /* ── Backgrounds & surfaces ── */
+  --color-bg:             #15121b;
+  --color-surface:        #221e28;
+  --color-surface-tinted: #2c2833;
+  --color-surface-glass:  rgba(34, 30, 40, 0.60);
+  --color-border:         rgba(255, 255, 255, 0.12);
+  --color-border-light:   rgba(255, 255, 255, 0.07);
+
+  /* ── Text ── */
+  --color-text:           #e8dfee;
+  --color-text-muted:     #ccc3d8;
+  --color-text-light:     #958da1;
+
+  /* ── Semantic ── */
+  --color-danger:         #ffb4ab;
+  --color-danger-bg:      rgba(147, 0, 10, 0.18);
+  --color-danger-border:  rgba(255, 180, 171, 0.30);
+  --color-success:        #6ee7b7;
+  --color-success-bg:     rgba(5, 150, 105, 0.15);
+  --color-success-border: rgba(110, 231, 183, 0.25);
+
+  /* backward-compat aliases */
+  --color-accent2:        #ddb7ff;
+  --color-accent2-hover:  #c0a8ff;
+  --color-blue:           #c0c1ff;
+
+  /* ── Gradients ── */
+  --gradient-primary:     linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  --gradient-purple:      linear-gradient(135deg, #7c3aed 0%, #d2bbff 100%);
+  --gradient-accent:      linear-gradient(135deg, #d2bbff 0%, #c0c1ff 100%);
+  --gradient-cyan:        linear-gradient(135deg, #5254df 0%, #c0c1ff 100%);
+  --gradient-rose:        linear-gradient(135deg, #93000a 0%, #ffb4ab 100%);
+  --gradient-warm:        linear-gradient(135deg, #7c3aed 0%, #ddb7ff 100%);
+  --gradient-tricolor:    linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #ddb7ff 100%);
+  --gradient-pink:        linear-gradient(135deg, #ddb7ff 0%, #7c3aed 100%);
+
+  --gradient-hero:
+    radial-gradient(ellipse 80% 60% at 20% 40%, rgba(124,58,237,0.30) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(210,187,255,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 95%, rgba(110,0,190,0.20) 0%, transparent 60%),
+    linear-gradient(175deg, #15121b 0%, #1d1a24 60%, #221e28 100%);
+
+  --gradient-club-hero:
+    linear-gradient(135deg, #100d16 0%, #221e28 30%, #2c2833 100%);
+
+  --gradient-mesh:
+    radial-gradient(at 40% 20%, rgba(124,58,237,0.22) 0px, transparent 50%),
+    radial-gradient(at 80% 0%,  rgba(210,187,255,0.12) 0px, transparent 50%),
+    radial-gradient(at 0%  50%, rgba(110,0,190,0.15)   0px, transparent 50%),
+    radial-gradient(at 80% 100%,rgba(124,58,237,0.12)  0px, transparent 50%);
+
+  /* ── Shadows (glow-based for dark theme) ── */
+  --shadow-sm:          0 1px 3px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.30);
+  --shadow-md:          0 4px 16px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.40);
+  --shadow-lg:          0 8px 32px rgba(0,0,0,.60), 0 4px 12px rgba(0,0,0,.40);
+  --shadow-xl:          0 20px 60px rgba(0,0,0,.70), 0 8px 24px rgba(0,0,0,.50);
+  --shadow-colored:     0 0 20px 2px rgba(124,58,237,0.22), 0 4px 16px rgba(124,58,237,0.15);
+  --shadow-colored-lg:  0 0 40px 4px rgba(124,58,237,0.30), 0 8px 32px rgba(124,58,237,0.20);
+  --shadow-cyan:        0 4px 24px rgba(192,193,255,0.18), 0 2px 8px rgba(192,193,255,0.12);
+  --shadow-rose:        0 4px 24px rgba(255,180,171,0.18), 0 2px 8px rgba(255,180,171,0.12);
+  --shadow-glass:       0 8px 32px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.40);
+  --inset-highlight:    inset 0 1px 0 rgba(255,255,255,0.08);
+
+  /* ── Border radii ── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-2xl:  32px;
+  --radius-pill: 999px;
+
+  /* ── Typography ── */
+  --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+
+  /* ── Motion ── */
+  --transition:        180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow:   320ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-expo:     cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(circle, rgba(124,58,237,0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img  { display: block; max-width: 100%; }
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+button { cursor: pointer; font-family: var(--font-sans); }
+
+select, input, textarea { font-family: var(--font-sans); }
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+
+@keyframes btn-shimmer {
+  from { transform: translateX(-100%) skewX(-12deg); }
+  to   { transform: translateX(300%) skewX(-12deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%  { transform: translateY(-14px) rotate(2deg); }
+  66%  { transform: translateY(-7px)  rotate(-1.5deg); }
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0   rgba(124,58,237,0.50); }
+  70%  { box-shadow: 0 0 0 10px rgba(124,58,237,0); }
+  100% { box-shadow: 0 0 0 0   rgba(124,58,237,0); }
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0%   50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  {
+  background: linear-gradient(180deg, rgba(124,58,237,0.45), rgba(168,85,247,0.45));
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(124,58,237,0.70), rgba(168,85,247,0.70));
+}

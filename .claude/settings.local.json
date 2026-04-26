@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(python3 *)",
+      "Bash(node *)",
+      "Bash(tail -c 100000 \"/c/Users/Gigabyte/.claude/projects/C--Users-Gigabyte-Documents-TFGdaw/1cd1d6fb-30f8-4848-acbb-2080c4a34d11.jsonl\")",
+      "Read(//tmp/**)",
+      "Bash(wc *)",
+      "Bash(awk 'NR>=1305 && NR<=1700' /c/Users/Gigabyte/Documents/TFGdaw/frontend/src/index.css)",
+      "Bash(awk NR>=1700 && NR<=2100 *)",
+      "Bash(awk 'NR>=2100 && NR<=2500' /c/Users/Gigabyte/Documents/TFGdaw/frontend/src/index.css)",
+      "Bash(awk NR>=2511 && NR<=2900 *)",
+      "Bash(awk NR>=3060 && NR<=3420 *)",
+      "Bash(awk NR>=4430 && NR<=4700 *)",
+      "Bash(awk NR>=3740 && NR<=3850 *)",
+      "Bash(npm run *)",
+      "Bash(grep -n \"var\\(--color-primary-hover\\\\|var\\(--color-surface-glass\\\\|var\\(--ease-out-expo\\\\|var\\(--transition-bounce\\\\|var\\(--color-accent2\\\\b\\\\|var\\(--color-blue\\\\b\\\\|var\\(--gradient-purple\\\\|var\\(--gradient-cyan\\\\|var\\(--gradient-rose\\\\|var\\(--gradient-warm\\\\|var\\(--gradient-tricolor\" /c/Users/Gigabyte/Documents/TFGdaw/frontend/src/styles/*.css)",
+      "Bash(npx tsc *)",
+      "Bash(grep -E \"\\\\.php$\")",
+      "Bash(pandoc --version)",
+      "Bash(npx --yes md-to-pdf --version)",
+      "Bash(npx md-to-pdf *)"
+    ]
+  }
+}

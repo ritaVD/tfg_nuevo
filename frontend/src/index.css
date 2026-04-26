@@ -1,0 +1,30 @@
+/* ============================================================
+   ENTRY POINT — imports all design modules
+   ============================================================ */
+
+/* 1. Tokens, reset, keyframes, scrollbar */
+@import './styles/tokens.css';
+
+/* 2. Layout — navbar, footer, page wrappers */
+@import './styles/layout.css';
+
+/* 3. Components — buttons, forms, badges, cards, tabs, alerts */
+@import './styles/components.css';
+
+/* 4. Auth — login / register pages */
+@import './styles/auth.css';
+
+/* 5. Home — hero, features section */
+@import './styles/home.css';
+
+/* 6. Books — search, grid, book detail, shelf drawer */
+@import './styles/books.css';
+
+/* 7. Clubs — club cards, hero, chat, threads, members */
+@import './styles/clubs.css';
+
+/* 8. Shelves — layout, sidebar, shelf panel, reading tracker */
+@import './styles/shelves.css';
+
+/* 9. Profile — avatar card, sections, posts, toggle switches */
+@import './styles/profile.css';
