@@ -32,6 +32,8 @@ RUN APP_ENV=prod composer install \
 
 COPY . .
 
+RUN echo "APP_ENV=prod" > .env.local
+
 RUN mkdir -p var/cache var/log \
     && chown -R www-data:www-data var/
 
