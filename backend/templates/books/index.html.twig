@@ -1,0 +1,391 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Buscar libros — TFGdaw{% endblock %}
+
+{% block body %}
+<div class="main-content">
+
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-header__title">🔍 Buscar libros</h1>
+      <p class="page-header__subtitle">Millones de títulos a través de Google Books</p>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input id="q" class="form-control" placeholder="Ej: Harry Potter, Tolkien…" autocomplete="off">
+    <select id="mode" class="form-control" style="width:160px; flex:none;">
+      <option value="q">Texto libre</option>
+      <option value="title">Título</option>
+      <option value="author">Autor</option>
+    </select>
+    <button id="btnSearch" class="btn btn-primary">Buscar</button>
+    <button id="btnReset" class="btn btn-secondary">Ver sugerencias</button>
+  </div>
+
+  <p id="status" class="status-msg"></p>
+  <div id="results" class="book-grid"></div>
+
+  <div id="pager" class="pager" style="display:none;">
+    <button id="prev" class="btn btn-secondary btn-sm">← Anterior</button>
+    <span id="pageInfo" class="text-muted text-sm"></span>
+    <button id="next" class="btn btn-secondary btn-sm">Siguiente →</button>
+  </div>
+
+</div>
+
+<!-- ===================== SHELF MODAL ===================== -->
+<div id="shelfModal" class="shelf-modal" aria-hidden="true">
+  <div class="shelf-modal__backdrop" id="shelfModalBackdrop"></div>
+  <div class="shelf-modal__box" role="dialog" aria-modal="true">
+
+    <div class="shelf-modal__header">
+      <div>
+        <p class="shelf-modal__label">Añadir a estantería</p>
+        <p class="shelf-modal__book-title" id="modalBookTitle"></p>
+      </div>
+      <button class="shelf-modal__close" id="shelfModalClose" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div class="shelf-modal__body">
+
+      <!-- Sección: estantería existente -->
+      <div class="shelf-modal__section" id="sectionExisting">
+        <p class="shelf-modal__section-title">Estantería existente</p>
+        <div class="form-group" style="margin-bottom:12px;">
+          <select id="modalShelfSelect" class="form-control form-control-sm">
+            <option value="">— Selecciona una estantería —</option>
+          </select>
+        </div>
+        <button id="modalAddBtn" class="btn btn-primary btn-sm btn-block">Añadir</button>
+        <p id="modalAddMsg" class="shelf-modal__msg"></p>
+      </div>
+
+      <div class="shelf-modal__divider"><span>o</span></div>
+
+      <!-- Sección: nueva estantería -->
+      <div class="shelf-modal__section">
+        <p class="shelf-modal__section-title">Crear nueva estantería</p>
+        <div class="form-group" style="margin-bottom:12px;">
+          <input id="newShelfName" class="form-control form-control-sm"
+                 placeholder="Nombre de la estantería" maxlength="80">
+        </div>
+        <button id="modalCreateBtn" class="btn btn-sm btn-block"
+                style="background:rgba(155,126,212,.12);color:var(--color-accent-hover);border:1px solid rgba(155,126,212,.4);">
+          Crear y añadir
+        </button>
+        <p id="modalCreateMsg" class="shelf-modal__msg"></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST ===================== -->
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<script>
+(function () {
+  let currentPage   = 1;
+  let lastQueryParams = null;
+  const isLoggedIn  = {{ app.user ? 'true' : 'false' }};
+  let userShelves   = [];
+  let activeExtId   = null;   // externalId del libro que está en el modal
+
+  /* ============================================================
+     SHELVES
+     ============================================================ */
+  async function loadShelves() {
+    if (!isLoggedIn) return;
+    try {
+      const res = await fetch('/api/shelves', { credentials: 'include' });
+      if (res.ok) userShelves = await res.json();
+    } catch (_) {}
+  }
+
+  function refreshShelfSelect() {
+    const sel = document.getElementById('modalShelfSelect');
+    sel.innerHTML = userShelves.length
+      ? '<option value="">— Selecciona una estantería —</option>' +
+        userShelves.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('')
+      : '<option value="">No tienes estanterías todavía</option>';
+  }
+
+  /* ============================================================
+     MODAL
+     ============================================================ */
+  function openModal(extId, bookTitle) {
+    activeExtId = extId;
+    document.getElementById('modalBookTitle').textContent = bookTitle;
+    document.getElementById('modalAddMsg').textContent    = '';
+    document.getElementById('modalCreateMsg').textContent = '';
+    document.getElementById('newShelfName').value         = '';
+    document.getElementById('modalAddBtn').disabled       = false;
+    document.getElementById('modalCreateBtn').disabled    = false;
+    refreshShelfSelect();
+
+    const modal = document.getElementById('shelfModal');
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('shelfModal');
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    activeExtId = null;
+  }
+
+  document.getElementById('shelfModalClose').addEventListener('click', closeModal);
+  document.getElementById('shelfModalBackdrop').addEventListener('click', closeModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  /* ---- Añadir a estantería existente ---- */
+  document.getElementById('modalAddBtn').addEventListener('click', async () => {
+    const shelfId = document.getElementById('modalShelfSelect').value;
+    const status  = 'want_to_read';
+    const msg     = document.getElementById('modalAddMsg');
+    const btn     = document.getElementById('modalAddBtn');
+
+    if (!shelfId) { msg.textContent = 'Selecciona una estantería'; msg.className = 'shelf-modal__msg error'; return; }
+
+    btn.disabled = true;
+    msg.textContent = '';
+
+    const ok = await addBookToShelf(activeExtId, shelfId, status, msg);
+    if (ok) {
+      closeModal();
+      showToast('✔ Libro añadido a la estantería');
+    } else {
+      btn.disabled = false;
+    }
+  });
+
+  /* ---- Crear nueva estantería y añadir ---- */
+  document.getElementById('modalCreateBtn').addEventListener('click', async () => {
+    const name   = document.getElementById('newShelfName').value.trim();
+    const status = 'want_to_read';
+    const msg    = document.getElementById('modalCreateMsg');
+    const btn    = document.getElementById('modalCreateBtn');
+
+    if (!name) { msg.textContent = 'Escribe un nombre'; msg.className = 'shelf-modal__msg error'; return; }
+
+    btn.disabled = true;
+    msg.textContent = '';
+
+    try {
+      // 1) Crear estantería
+      const res = await fetch('/api/shelves', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        msg.textContent = data.error || 'Error al crear la estantería';
+        msg.className = 'shelf-modal__msg error';
+        btn.disabled = false;
+        return;
+      }
+
+      // 2) Añadir la nueva estantería a la lista local
+      userShelves.push({ id: data.id, name: data.name });
+
+      // 3) Añadir libro
+      const ok = await addBookToShelf(activeExtId, String(data.id), status, msg);
+      if (ok) {
+        closeModal();
+        showToast('✔ Estantería creada y libro añadido');
+      } else {
+        btn.disabled = false;
+      }
+    } catch (_) {
+      msg.textContent = 'Error de red';
+      msg.className = 'shelf-modal__msg error';
+      btn.disabled = false;
+    }
+  });
+
+  /* ---- Helper: POST libro a estantería ---- */
+  async function addBookToShelf(extId, shelfId, status, msgEl) {
+    try {
+      const res = await fetch(`/api/shelves/${shelfId}/books`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalId: extId, status })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return true;
+      msgEl.textContent = data.error || 'Error al añadir';
+      msgEl.className = 'shelf-modal__msg error';
+      return false;
+    } catch (_) {
+      msgEl.textContent = 'Error de red';
+      msgEl.className = 'shelf-modal__msg error';
+      return false;
+    }
+  }
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  let toastTimer = null;
+  function showToast(message) {
+    const el = document.getElementById('toast');
+    el.textContent = message;
+    el.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), 3000);
+  }
+
+  /* ============================================================
+     BOOK CARDS
+     ============================================================ */
+  function buildUrl(page) {
+    const params = new URLSearchParams(lastQueryParams || {});
+    params.set('page', String(page));
+    params.set('limit', '20');
+    return '/api/books/search?' + params.toString();
+  }
+
+  function escHtml(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function cardHtml(b) {
+    const authors = b.authors?.length ? b.authors.join(', ') : 'Autor desconocido';
+    const cover   = b.thumbnail || 'https://placehold.co/190x220/f5f0e8/9b7ed4?text=📖';
+    const extId   = escHtml(b.externalId || b.id || '');
+    const title   = b.title || 'Sin título';
+
+    const previewBtn = b.previewLink
+      ? `<a href="${escHtml(b.previewLink)}" target="_blank" rel="noopener"
+            class="btn btn-sm"
+            style="background:rgba(155,126,212,.12);color:var(--color-accent-hover);border:1px solid rgba(155,126,212,.35);">
+           Preview
+         </a>`
+      : '';
+
+    const addBtn = isLoggedIn
+      ? `<button class="btn btn-primary btn-sm js-open-shelf"
+                 data-ext-id="${extId}"
+                 data-title="${escHtml(title)}">
+           + Estantería
+         </button>`
+      : `<a href="{{ path('app_login') }}" class="btn btn-primary btn-sm">+ Estantería</a>`;
+
+    return `
+      <div class="book-card" data-id="${extId}">
+        <div class="book-card__cover-wrap">
+          <img class="book-card__cover" src="${escHtml(cover)}" alt="Portada" loading="lazy"
+               onerror="this.src='https://placehold.co/130x200/f5f0e8/9b7ed4?text=📖'">
+        </div>
+        <div class="book-card__body">
+          <div class="book-card__title">${escHtml(title)}</div>
+          <div class="book-card__author">${escHtml(authors)}</div>
+          <div class="book-card__actions">
+            ${previewBtn}
+            ${addBtn}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* Delegación de eventos para los botones de estantería */
+  document.getElementById('results').addEventListener('click', e => {
+    const btn = e.target.closest('.js-open-shelf');
+    if (btn) openModal(btn.dataset.extId, btn.dataset.title);
+  });
+
+  /* ============================================================
+     FETCH BOOKS
+     ============================================================ */
+  async function fetchBooks(page = 1) {
+    const statusEl = document.getElementById('status');
+    const results  = document.getElementById('results');
+    const pager    = document.getElementById('pager');
+
+    statusEl.innerHTML = '<span class="spinner"></span> Buscando…';
+    results.innerHTML  = '';
+    pager.style.display = 'none';
+
+    try {
+      const res  = await fetch(buildUrl(page));
+      const data = await res.json();
+
+      if (!res.ok) {
+        statusEl.textContent = 'Error: ' + (data.error || 'No se pudo buscar');
+        return;
+      }
+
+      const list = data.results || [];
+      currentPage = data.page || page;
+
+      if (!list.length) {
+        statusEl.textContent = '';
+        results.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-state__icon">📭</div>
+            <div class="empty-state__title">Sin resultados</div>
+            <div class="empty-state__desc">Prueba con otro término de búsqueda.</div>
+          </div>`;
+        return;
+      }
+
+      statusEl.textContent = `${list.length} resultado${list.length !== 1 ? 's' : ''} — página ${currentPage}`;
+      results.innerHTML = list.map(cardHtml).join('');
+
+      pager.style.display = 'flex';
+      document.getElementById('prev').disabled = currentPage <= 1;
+      document.getElementById('pageInfo').textContent = `Página ${currentPage}`;
+
+    } catch (_) {
+      statusEl.textContent = 'Error de red. Inténtalo de nuevo.';
+    }
+  }
+
+  function makeQueryParams() {
+    const q    = document.getElementById('q').value.trim();
+    const mode = document.getElementById('mode').value;
+    if (!q) return null;
+    if (mode === 'title')  return { title: q, lang: 'es' };
+    if (mode === 'author') return { author: q, lang: 'es' };
+    return { q, lang: 'es' };
+  }
+
+  document.getElementById('btnSearch').addEventListener('click', () => {
+    const params = makeQueryParams();
+    if (!params) { document.getElementById('status').textContent = 'Escribe algo para buscar.'; return; }
+    lastQueryParams = params;
+    fetchBooks(1);
+  });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    lastQueryParams = { q: 'bestseller', lang: 'es', orderBy: 'newest', printType: 'books' };
+    fetchBooks(1);
+  });
+
+  document.getElementById('q').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btnSearch').click();
+  });
+
+  document.getElementById('prev').addEventListener('click', () => {
+    if (currentPage > 1) fetchBooks(currentPage - 1);
+  });
+  document.getElementById('next').addEventListener('click', () => fetchBooks(currentPage + 1));
+
+  loadShelves().then(() => {
+    lastQueryParams = { q: 'bestseller', lang: 'es', orderBy: 'newest', printType: 'books' };
+    fetchBooks(1);
+  });
+})();
+</script>
+{% endblock %}

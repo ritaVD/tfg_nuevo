@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Crear cuenta — TFGdaw{% endblock %}
+
+{% block body %}
+<div class="auth-page">
+  <div class="auth-card">
+
+    <div class="auth-card__logo">📚</div>
+    <h1 class="auth-card__title">Crear cuenta</h1>
+    <p class="auth-card__subtitle">Únete a la comunidad lectora</p>
+
+    {% for flash_error in app.flashes('verify_email_error') %}
+      <div class="alert alert-danger">{{ flash_error }}</div>
+    {% endfor %}
+
+    {{ form_errors(registrationForm) }}
+
+    {{ form_start(registrationForm, { attr: { novalidate: 'novalidate' } }) }}
+
+      <div class="form-group">
+        {{ form_label(registrationForm.email, 'Correo electrónico', { label_attr: { class: 'form-label' } }) }}
+        {{ form_widget(registrationForm.email, { attr: { class: 'form-control', placeholder: 'tu@email.com' } }) }}
+        {{ form_errors(registrationForm.email) }}
+      </div>
+
+      <div class="form-group">
+        {{ form_label(registrationForm.displayName, 'Nombre de usuario', { label_attr: { class: 'form-label' } }) }}
+        {{ form_widget(registrationForm.displayName, { attr: { class: 'form-control', placeholder: 'mi_nombre_usuario' } }) }}
+        <small class="form-text text-muted" style="font-size:.8rem;color:var(--color-text-muted);">
+          Solo letras, números, puntos, guiones y guiones bajos. Mínimo 3 caracteres.
+        </small>
+        {{ form_errors(registrationForm.displayName) }}
+      </div>
+
+      <div class="form-group">
+        {{ form_label(registrationForm.plainPassword, 'Contraseña', { label_attr: { class: 'form-label' } }) }}
+        {{ form_widget(registrationForm.plainPassword, { attr: { class: 'form-control', placeholder: 'Mínimo 6 caracteres' } }) }}
+        {{ form_errors(registrationForm.plainPassword) }}
+      </div>
+
+      <div class="form-check">
+        {{ form_widget(registrationForm.agreeTerms) }}
+        <label for="{{ registrationForm.agreeTerms.vars.id }}">
+          Acepto los <a href="#">términos y condiciones</a>
+        </label>
+        {{ form_errors(registrationForm.agreeTerms) }}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        Crear cuenta
+      </button>
+
+    {{ form_end(registrationForm) }}
+
+    <div class="auth-card__footer">
+      ¿Ya tienes cuenta?
+      <a href="{{ path('app_login') }}">Inicia sesión</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

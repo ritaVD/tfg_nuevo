@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TFGdaw{% endblock %}</title>
+    {% block stylesheets %}{% endblock %}
+    {{ importmap('app') }}
+  </head>
+
+  <body style="display:flex;flex-direction:column;min-height:100vh;">
+
+    <nav class="navbar">
+      <div class="navbar__inner">
+
+        <a href="{{ path('app_home') }}" class="navbar__brand">
+          <span class="navbar__brand-icon">📚</span>
+          TFGdaw
+        </a>
+
+        <div class="navbar__links">
+          <a href="{{ path('app_home') }}" class="navbar__link">Inicio</a>
+          <a href="{{ path('app_books') }}" class="navbar__link">Buscar libros</a>
+          <a href="/clubs" class="navbar__link">Clubs</a>
+          {% if app.user %}
+            <a href="/shelves" class="navbar__link">Mis estanterías</a>
+          {% endif %}
+        </div>
+
+        <div class="navbar__actions">
+          {% if app.user %}
+            <span class="navbar__user">{{ app.user.email }}</span>
+
+            {# Campanita de notificaciones #}
+            <div class="notif-bell" id="notifBell">
+              <button class="notif-bell__btn" id="notifBtn" aria-label="Notificaciones">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <span class="notif-bell__badge" id="notifBadge" style="display:none;"></span>
+              </button>
+              <div class="notif-bell__dropdown" id="notifDropdown" aria-hidden="true">
+                <div class="notif-bell__header">
+                  <span>Notificaciones</span>
+                </div>
+                <div class="notif-bell__body" id="notifBody">
+                  <div class="notif-bell__empty">Cargando…</div>
+                </div>
+              </div>
+            </div>
+
+            <a href="{{ path('app_profile') }}" class="btn btn-ghost btn-sm">Perfil</a>
+            <a href="{{ path('app_logout') }}" class="btn btn-ghost btn-sm">Salir</a>
+          {% else %}
+            <a href="{{ path('app_login') }}" class="btn btn-ghost btn-sm">Entrar</a>
+            <a href="{{ path('app_register') }}" class="btn btn-primary btn-sm">Registrarse</a>
+          {% endif %}
+        </div>
+
+      </div>
+    </nav>
+
+    {% for label, messages in app.flashes %}
+      {% for message in messages %}
+        <div style="max-width:1100px;margin:16px auto;padding:0 20px;">
+          <div class="alert alert-{{ label == 'error' ? 'danger' : (label == 'success' ? 'success' : 'danger') }}">
+            {{ message }}
+          </div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+
+    <div style="flex:1;">
+      {% block body %}{% endblock %}
+    </div>
+
+    {% if app.user %}
+    <script>
+    (function () {
+      const btn      = document.getElementById('notifBtn');
+      const dropdown = document.getElementById('notifDropdown');
+      const badge    = document.getElementById('notifBadge');
+      const body     = document.getElementById('notifBody');
+      if (!btn) return;
+
+      /* Silenciados en localStorage */
+      function getMuted() { try { return JSON.parse(localStorage.getItem('mutedThreads') || '[]'); } catch(_){ return []; } }
+
+      function statusLabel(s) {
+        if (s === 'pending')  return '<span style="color:var(--color-accent);font-weight:600;">⏳ Pendiente</span>';
+        if (s === 'approved') return '<span style="color:var(--color-success);font-weight:600;">✔ Aprobada</span>';
+        if (s === 'rejected') return '<span style="color:var(--color-danger);font-weight:600;">✕ Rechazada</span>';
+        return s;
+      }
+
+      async function loadNotifications() {
+        body.innerHTML = '<div class="notif-bell__empty">Cargando…</div>';
+        try {
+          const [myRes, adminRes] = await Promise.all([
+            fetch('/api/my-requests',    { credentials: 'include' }),
+            fetch('/api/admin-requests', { credentials: 'include' }),
+          ]);
+
+          const myRequests    = myRes.ok    ? await myRes.json()    : [];
+          const adminRequests = adminRes.ok ? await adminRes.json() : [];
+
+          const totalBadge = myRequests.filter(r => r.status === 'pending').length + adminRequests.length;
+          if (totalBadge > 0) {
+            badge.textContent = totalBadge;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+
+          let html = '';
+
+          /* ── Solicitudes recibidas (admin) ── */
+          if (adminRequests.length) {
+            html += `<div class="notif-bell__section-title">Solicitudes recibidas</div>`;
+            html += adminRequests.map(r => `
+              <div class="notif-bell__item notif-bell__item--admin">
+                <div class="notif-bell__item-title">👤 ${escHtml(r.user.displayName)}</div>
+                <div class="notif-bell__item-sub">
+                  Quiere unirse a <strong>${escHtml(r.club.name)}</strong>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:6px;">
+                  <button class="btn btn-primary btn-sm js-approve-req" data-req-id="${r.id}" data-club-id="${r.club.id}">✔ Aceptar</button>
+                  <button class="btn btn-secondary btn-sm js-reject-req"  data-req-id="${r.id}" data-club-id="${r.club.id}">✕ Rechazar</button>
+                </div>
+              </div>`).join('');
+          }
+
+          /* ── Mis solicitudes enviadas ── */
+          if (myRequests.length) {
+            html += `<div class="notif-bell__section-title">Mis solicitudes</div>`;
+            html += myRequests.map(r => `
+              <div class="notif-bell__item">
+                <div class="notif-bell__item-title">${escHtml(r.club.name)}</div>
+                <div class="notif-bell__item-sub">Solicitud de ingreso · ${statusLabel(r.status)}</div>
+              </div>`).join('');
+          }
+
+          if (!html) {
+            html = '<div class="notif-bell__empty">Sin notificaciones</div>';
+          }
+
+          body.innerHTML = html;
+
+          /* Aceptar / rechazar inline */
+          body.querySelectorAll('.js-approve-req').forEach(btn => {
+            btn.addEventListener('click', () => handleRequest(btn.dataset.clubId, btn.dataset.reqId, 'approve'));
+          });
+          body.querySelectorAll('.js-reject-req').forEach(btn => {
+            btn.addEventListener('click', () => handleRequest(btn.dataset.clubId, btn.dataset.reqId, 'reject'));
+          });
+
+        } catch (_) {
+          body.innerHTML = '<div class="notif-bell__empty">Error cargando notificaciones</div>';
+        }
+      }
+
+      async function handleRequest(clubId, reqId, action) {
+        try {
+          const res = await fetch(`/api/clubs/${clubId}/requests/${reqId}/${action}`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+          if (res.ok) loadNotifications();
+        } catch (_) {}
+      }
+
+      function escHtml(str) {
+        return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const open = dropdown.classList.toggle('is-open');
+        dropdown.setAttribute('aria-hidden', String(!open));
+        if (open) loadNotifications();
+      });
+
+      document.addEventListener('click', e => {
+        if (!document.getElementById('notifBell').contains(e.target)) {
+          dropdown.classList.remove('is-open');
+          dropdown.setAttribute('aria-hidden', 'true');
+        }
+      });
+
+      loadNotifications();
+    })();
+    </script>
+    {% endif %}
+
+    <footer class="footer">
+      <div class="footer__inner">
+
+        <!-- Marca -->
+        <div>
+          <div class="footer__brand-name">
+            <span>📚</span> TFGdaw
+          </div>
+          <p class="footer__brand-desc">
+            Tu plataforma para descubrir libros, gestionar estanterías y conectar con otros lectores en clubs de lectura.
+          </p>
+          <div class="footer__social">
+            <!-- Instagram -->
+            <a href="#" class="footer__social-link" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+            <!-- Twitter / X -->
+            <a href="#" class="footer__social-link" aria-label="Twitter / X">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Navegación -->
+        <div>
+          <p class="footer__col-title">Navegación</p>
+          <ul class="footer__links">
+            <li><a href="{{ path('app_home') }}">Inicio</a></li>
+            <li><a href="{{ path('app_books') }}">Buscar libros</a></li>
+            <li><a href="/clubs">Clubs de lectura</a></li>
+            {% if app.user %}
+              <li><a href="/shelves">Mis estanterías</a></li>
+              <li><a href="{{ path('app_profile') }}">Mi perfil</a></li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <!-- Cuenta -->
+        <div>
+          <p class="footer__col-title">Cuenta</p>
+          <ul class="footer__links">
+            {% if app.user %}
+              <li><a href="{{ path('app_profile') }}">Configuración</a></li>
+              <li><a href="{{ path('app_logout') }}">Cerrar sesión</a></li>
+            {% else %}
+              <li><a href="{{ path('app_login') }}">Iniciar sesión</a></li>
+              <li><a href="{{ path('app_register') }}">Crear cuenta</a></li>
+            {% endif %}
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer__bottom">
+        <span class="footer__copy">&copy; {{ "now"|date("Y") }} TFGdaw — Todos los derechos reservados.</span>
+        <span class="footer__tagline">Hecho con ❤️ para lectores</span>
+      </div>
+    </footer>
+
+  </body>
+</html>

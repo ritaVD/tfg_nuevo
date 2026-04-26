@@ -1,0 +1,689 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Club — TFGdaw{% endblock %}
+
+{% block body %}
+
+{# ══════════════════════════════════════════════════════════
+   LOADING / ERROR states
+══════════════════════════════════════════════════════════ #}
+<div id="clubLoading" style="padding:80px 20px;text-align:center;">
+  <span class="spinner" style="width:32px;height:32px;border-width:3px;"></span>
+  <p style="margin-top:14px;color:var(--color-text-muted);">Cargando club…</p>
+</div>
+<div id="clubError" class="alert alert-danger" style="display:none;max-width:600px;margin:40px auto;"></div>
+
+{# ══════════════════════════════════════════════════════════
+   CLUB CONTENT
+══════════════════════════════════════════════════════════ #}
+<div id="clubContent" style="display:none;">
+
+  {# ── Hero ── #}
+  <div class="club-hero">
+    <div class="club-hero__inner">
+      <a href="/clubs" class="club-hero__back">← Volver a clubs</a>
+      <div class="club-hero__top">
+        <div>
+          <h1 class="club-hero__name" id="clubName"></h1>
+          <p class="club-hero__desc" id="clubDesc"></p>
+          <div class="club-hero__meta">
+            <span class="club-hero__badge" id="clubVisibility"></span>
+            <span class="club-hero__stat" id="clubMemberStat"></span>
+          </div>
+        </div>
+        <div class="club-hero__actions" id="clubActions"></div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Two-column body ── #}
+  <div class="club-body">
+
+    {# ── Main: debates ── #}
+    <div>
+
+      {# Threads list #}
+      <div id="chatsSection">
+        <div class="club-section-head">
+          <span class="club-section-title">💬 Hilos de debate</span>
+          <button id="btnNewThread" class="btn btn-primary btn-sm" style="display:none;">+ Nuevo hilo</button>
+        </div>
+
+        <div id="newThreadForm" class="new-thread-form" style="display:none;">
+          <input id="threadTitle" class="form-control form-control-sm" placeholder="Título del hilo…" maxlength="120" style="flex:1;">
+          <button id="btnCreateThread" class="btn btn-primary btn-sm">Crear</button>
+          <button id="btnCancelThread" class="btn btn-secondary btn-sm">Cancelar</button>
+        </div>
+
+        <div id="threadsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div id="threadsEmpty" class="empty-state" style="display:none;padding:40px 0;">
+          <div class="empty-state__icon">💬</div>
+          <div class="empty-state__title">Sin debates aún</div>
+          <div class="empty-state__desc">El administrador puede crear hilos de debate.</div>
+        </div>
+      </div>
+
+      {# Messages view #}
+      <div id="messagesSection" style="display:none;">
+        <div class="chat-wrap">
+          <div class="chat-head">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <button id="btnBackThreads" class="btn btn-secondary btn-sm">← Volver</button>
+              <span class="chat-head__title" id="threadTitleHeader"></span>
+            </div>
+            <span id="threadStatusBadge"></span>
+          </div>
+          <div class="chat-messages" id="messagesList"></div>
+          <div class="chat-input" id="msgInputArea" style="display:none;">
+            <input id="msgInput" class="form-control form-control-sm" placeholder="Escribe un mensaje…" maxlength="2000" style="flex:1;">
+            <button id="btnSendMsg" class="btn btn-primary btn-sm">Enviar</button>
+          </div>
+        </div>
+      </div>
+
+    </div>{# /main #}
+
+    {# ── Sidebar ── #}
+    <aside style="position:sticky;top:80px;display:flex;flex-direction:column;gap:0;">
+
+      {# Info widget #}
+      <div class="sidebar-widget">
+        <div class="sidebar-widget__head">Información</div>
+        <div class="sidebar-widget__body" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:.82rem;color:var(--color-text-muted);">Visibilidad</span>
+            <span id="sidebarVisibility"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:.82rem;color:var(--color-text-muted);">Miembros</span>
+            <span id="clubMemberCount" style="font-weight:700;font-size:.92rem;"></span>
+          </div>
+        </div>
+      </div>
+
+      {# Book of the month widget #}
+      <div class="sidebar-widget" id="currentBookCard" style="display:none;margin-top:16px;">
+        <div class="sidebar-widget__head">
+          <span>📖 Libro del mes</span>
+          <button id="btnManageBook" class="btn btn-primary btn-sm" style="display:none;font-size:.72rem;padding:3px 8px;">Cambiar</button>
+        </div>
+        <div class="sidebar-widget__body">
+          <div id="currentBookBody"></div>
+          <button id="btnRemoveBook" class="btn btn-secondary btn-sm" style="display:none;width:100%;margin-top:10px;font-size:.78rem;">✕ Quitar libro del mes</button>
+        </div>
+      </div>
+
+      {# Admin: no book yet → show set-book button #}
+      <div id="adminNoBookWidget" class="sidebar-widget" style="display:none;margin-top:16px;">
+        <div class="sidebar-widget__head">📖 Libro del mes</div>
+        <div class="sidebar-widget__body" style="text-align:center;padding:18px 16px;">
+          <p style="font-size:.82rem;color:var(--color-text-muted);margin-bottom:12px;">Sin libro del mes establecido.</p>
+          <button id="btnOpenBookModal" class="btn btn-primary btn-sm" style="width:100%;">+ Establecer libro del mes</button>
+        </div>
+      </div>
+
+      {# Members widget #}
+      <div class="sidebar-widget" style="margin-top:16px;">
+        <div class="sidebar-widget__head">👥 Miembros</div>
+        <div class="sidebar-widget__body" id="membersList" style="padding:8px 16px;"></div>
+      </div>
+
+    </aside>
+
+  </div>{# /club-body #}
+</div>{# /clubContent #}
+
+{# ══════════════════════════════════════════════════════════
+   BOOK ADMIN MODAL
+══════════════════════════════════════════════════════════ #}
+<div class="book-modal" id="bookModal" role="dialog" aria-modal="true">
+  <div class="book-modal__box">
+    <div class="book-modal__head">
+      <span class="book-modal__title">📖 Establecer libro del mes</span>
+      <button class="book-modal__close" id="btnCloseBookModal" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="book-modal__body">
+      {# Search #}
+      <div class="form-group" style="margin:0;">
+        <label class="form-label" style="font-size:.82rem;margin-bottom:5px;">Buscar libro</label>
+        <div style="display:flex;gap:7px;">
+          <input id="bookSearchInput" class="form-control form-control-sm" placeholder="Título, autor…" style="flex:1;">
+          <button id="btnBookSearch" class="btn btn-primary btn-sm" style="white-space:nowrap;">Buscar</button>
+        </div>
+      </div>
+
+      {# Results #}
+      <div id="bookSearchResults" style="display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;"></div>
+
+      {# Selected book preview #}
+      <div id="bookSelected" style="display:none;background:rgba(155,126,212,.08);border:1px solid rgba(155,126,212,.22);border-radius:var(--radius-sm);padding:10px 12px;">
+        <div style="font-size:.72rem;color:var(--color-text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em;">Seleccionado</div>
+        <div id="bookSelectedTitle" style="font-weight:700;font-size:.9rem;"></div>
+        <div id="bookSelectedAuthor" style="font-size:.8rem;color:var(--color-text-muted);"></div>
+      </div>
+
+      {# Date range #}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-size:.8rem;margin-bottom:4px;">Fecha de inicio</label>
+          <input type="date" id="bookDateFrom" class="form-control form-control-sm">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label class="form-label" style="font-size:.8rem;margin-bottom:4px;">Fecha de fin</label>
+          <input type="date" id="bookDateUntil" class="form-control form-control-sm">
+        </div>
+      </div>
+    </div>
+    <div class="book-modal__footer">
+      <button id="btnSetBook" class="btn btn-primary btn-sm" disabled>✔ Confirmar</button>
+      <button id="btnCancelBook" class="btn btn-secondary btn-sm">Cancelar</button>
+      <span id="bookSetMsg" style="font-size:.8rem;margin-left:4px;"></span>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<script>
+(function () {
+  const clubId     = {{ clubId }};
+  const isLoggedIn = {{ app.user ? 'true' : 'false' }};
+  const myUserId   = {{ app.user ? app.user.id : 0 }};
+  let clubData     = null;
+  let activeChat   = null;
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── Toast ── */
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), 3200);
+  }
+
+  /* ══════════════════════════════════════════
+     LOAD CLUB
+  ══════════════════════════════════════════ */
+  async function loadClub() {
+    try {
+      const [clubRes, membersRes] = await Promise.all([
+        fetch(`/api/clubs/${clubId}`, { credentials: 'include' }),
+        fetch(`/api/clubs/${clubId}/members`, { credentials: 'include' }),
+      ]);
+
+      if (!clubRes.ok) throw new Error('Club no encontrado');
+      clubData = await clubRes.json();
+
+      document.getElementById('clubLoading').style.display = 'none';
+      document.getElementById('clubContent').style.display = 'block';
+      document.title = clubData.name + ' — TFGdaw';
+
+      renderClubHeader(clubData);
+      const members = membersRes.ok ? await membersRes.json() : [];
+      renderMembers(members);
+      renderCurrentBook(clubData.currentBook);
+      await loadThreads();
+    } catch (e) {
+      document.getElementById('clubLoading').style.display = 'none';
+      const err = document.getElementById('clubError');
+      err.textContent = e.message;
+      err.style.display = 'block';
+    }
+  }
+
+  function renderClubHeader(club) {
+    document.getElementById('clubName').textContent = club.name;
+    document.getElementById('clubDesc').textContent = club.description || '';
+    document.getElementById('clubMemberCount').textContent = club.memberCount ?? 0;
+    document.getElementById('clubMemberStat').innerHTML =
+      `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+       ${club.memberCount ?? 0} miembro${(club.memberCount ?? 0) !== 1 ? 's' : ''}`;
+
+    const visEl = document.getElementById('clubVisibility');
+    const sideVisEl = document.getElementById('sidebarVisibility');
+    if (club.visibility === 'public') {
+      visEl.textContent = '🌐 Público';
+      sideVisEl.innerHTML = '<span class="badge badge-accent">🌐 Público</span>';
+    } else {
+      visEl.textContent = '🔒 Privado';
+      sideVisEl.innerHTML = '<span class="badge badge-neutral">🔒 Privado</span>';
+    }
+
+    const actions = document.getElementById('clubActions');
+    if (isLoggedIn) {
+      if (!club.myRole) {
+        const joinBtn = document.createElement('button');
+        joinBtn.className = 'btn btn-hero-primary btn-sm';
+        joinBtn.textContent = club.visibility === 'public' ? 'Unirse al club' : 'Solicitar entrada';
+        joinBtn.addEventListener('click', joinClub);
+        actions.appendChild(joinBtn);
+      } else if (club.myRole === 'member') {
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'btn btn-hero btn-sm';
+        leaveBtn.textContent = 'Abandonar club';
+        leaveBtn.addEventListener('click', leaveClub);
+        actions.appendChild(leaveBtn);
+      } else if (club.myRole === 'admin') {
+        const leaveBtn = document.createElement('button');
+        leaveBtn.className = 'btn btn-hero btn-sm';
+        leaveBtn.textContent = 'Abandonar club';
+        leaveBtn.addEventListener('click', leaveClub);
+        actions.appendChild(leaveBtn);
+      }
+
+      if (club.myRole === 'admin') {
+        document.getElementById('btnNewThread').style.display = 'inline-flex';
+        if (!club.currentBook) {
+          document.getElementById('adminNoBookWidget').style.display = 'block';
+        } else {
+          document.getElementById('btnManageBook').style.display = 'inline-flex';
+          document.getElementById('btnRemoveBook').style.display  = 'block';
+        }
+      }
+    }
+  }
+
+  function renderCurrentBook(book) {
+    const card     = document.getElementById('currentBookCard');
+    const noWidget = document.getElementById('adminNoBookWidget');
+    const body     = document.getElementById('currentBookBody');
+
+    if (!book) {
+      card.style.display = 'none';
+      if (clubData?.myRole === 'admin') noWidget.style.display = 'block';
+      return;
+    }
+
+    card.style.display = 'block';
+    noWidget.style.display = 'none';
+
+    let datesHtml = '';
+    if (book.since || book.until) {
+      const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '?';
+      datesHtml = `<div class="book-month__dates">📅 ${fmt(book.since)} — ${book.until ? fmt(book.until) : '···'}</div>`;
+    }
+
+    body.innerHTML = `
+      <div class="book-month">
+        ${book.coverUrl
+          ? `<img src="${esc(book.coverUrl)}" class="book-month__cover" alt="Portada">`
+          : `<div style="width:58px;height:80px;background:var(--color-bg);border-radius:4px;border:1px solid var(--color-border);flex-shrink:0;"></div>`}
+        <div class="book-month__info">
+          <div class="book-month__title">${esc(book.title)}</div>
+          <div class="book-month__author">${esc((book.authors || []).join(', '))}</div>
+          ${datesHtml}
+        </div>
+      </div>`;
+  }
+
+  function renderMembers(members) {
+    const list = document.getElementById('membersList');
+    if (!members.length) {
+      list.innerHTML = '<span style="font-size:.82rem;color:var(--color-text-muted);">Sin miembros visibles.</span>';
+      return;
+    }
+    list.innerHTML = members.map(m => `
+      <div class="member-row ${m.role === 'admin' ? 'member-row--admin' : ''}">
+        <div class="member-row__avatar">${esc((m.user.displayName || '?')[0].toUpperCase())}</div>
+        <div class="member-row__name">${esc(m.user.displayName || 'Usuario')}</div>
+        ${m.role === 'admin'
+          ? '<span class="badge badge-primary" style="font-size:.68rem;">Admin</span>'
+          : '<span style="font-size:.75rem;color:var(--color-text-muted);">Miembro</span>'}
+      </div>`).join('');
+  }
+
+  /* ══════════════════════════════════════════
+     LIBRO DEL MES (admin) — MODAL
+  ══════════════════════════════════════════ */
+  let selectedBookId = null;
+
+  function openBookModal() {
+    resetBookSearch();
+    // Pre-fill dates
+    const today = new Date(), until = new Date(today);
+    until.setMonth(until.getMonth() + 1);
+    const fmt = d => d.toISOString().slice(0, 10);
+    document.getElementById('bookDateFrom').value  = fmt(today);
+    document.getElementById('bookDateFrom').min    = fmt(today);
+    document.getElementById('bookDateUntil').value = fmt(until);
+    document.getElementById('bookDateUntil').min   = fmt(today);
+    document.getElementById('bookModal').classList.add('is-open');
+  }
+  function closeBookModal() {
+    document.getElementById('bookModal').classList.remove('is-open');
+    resetBookSearch();
+  }
+
+  document.getElementById('btnOpenBookModal')?.addEventListener('click', openBookModal);
+  document.getElementById('btnManageBook')?.addEventListener('click', openBookModal);
+  document.getElementById('btnCloseBookModal')?.addEventListener('click', closeBookModal);
+  document.getElementById('btnCancelBook')?.addEventListener('click', closeBookModal);
+  document.getElementById('bookModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('bookModal')) closeBookModal();
+  });
+
+  document.getElementById('btnRemoveBook')?.addEventListener('click', async () => {
+    const res = await fetch(`/api/clubs/${clubId}/current-book`, { method: 'DELETE', credentials: 'include' });
+    if (res.ok) {
+      clubData.currentBook = null;
+      document.getElementById('btnManageBook').style.display = 'none';
+      document.getElementById('btnRemoveBook').style.display = 'none';
+      renderCurrentBook(null);
+      showToast('Libro del mes eliminado');
+    } else {
+      showToast('Error al quitar el libro');
+    }
+  });
+
+  document.getElementById('btnBookSearch')?.addEventListener('click', searchBooks);
+  document.getElementById('bookSearchInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') searchBooks();
+  });
+
+  async function searchBooks() {
+    const q = document.getElementById('bookSearchInput').value.trim();
+    if (!q) return;
+    const results = document.getElementById('bookSearchResults');
+    results.innerHTML = '<div style="font-size:.8rem;color:var(--color-text-muted);padding:4px 0;">Buscando…</div>';
+    try {
+      const res  = await fetch(`/api/books/search?q=${encodeURIComponent(q)}&limit=8`, { credentials: 'include' });
+      const json = res.ok ? await res.json() : {};
+      const data = json.results ?? [];
+      if (!data.length) {
+        results.innerHTML = '<div style="font-size:.8rem;color:var(--color-text-muted);padding:4px 0;">Sin resultados.</div>';
+        return;
+      }
+      results.innerHTML = data.map(b => `
+        <div class="book-search-row js-pick-book"
+             data-ext-id="${esc(b.externalId)}"
+             data-title="${esc(b.title)}"
+             data-author="${esc((b.authors||[]).join(', '))}"
+             style="display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--radius-sm);
+                    cursor:pointer;border:1px solid var(--color-border);background:var(--color-bg);">
+          ${b.thumbnail
+            ? `<img src="${esc(b.thumbnail)}" style="width:30px;height:42px;object-fit:cover;border-radius:3px;flex-shrink:0;">`
+            : `<div style="width:30px;height:42px;background:var(--color-border);border-radius:3px;flex-shrink:0;"></div>`}
+          <div style="overflow:hidden;">
+            <div style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(b.title)}</div>
+            <div style="font-size:.74rem;color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc((b.authors||[]).join(', '))}</div>
+          </div>
+        </div>`).join('');
+    } catch (_) {
+      results.innerHTML = '<div style="font-size:.8rem;color:var(--color-danger);">Error al buscar.</div>';
+    }
+  }
+
+  document.getElementById('bookSearchResults')?.addEventListener('click', e => {
+    const row = e.target.closest('.js-pick-book');
+    if (!row) return;
+    selectedBookId = row.dataset.extId;
+    document.getElementById('bookSelectedTitle').textContent  = row.dataset.title;
+    document.getElementById('bookSelectedAuthor').textContent = row.dataset.author;
+    document.getElementById('bookSelected').style.display     = 'block';
+    document.getElementById('btnSetBook').disabled            = false;
+    document.querySelectorAll('.book-search-row').forEach(r => r.style.background = 'var(--color-bg)');
+    row.style.background = 'rgba(155,126,212,.12)';
+  });
+
+  document.getElementById('btnSetBook')?.addEventListener('click', async () => {
+    if (!selectedBookId) return;
+    const dateFrom  = document.getElementById('bookDateFrom').value;
+    const dateUntil = document.getElementById('bookDateUntil').value;
+    const msg       = document.getElementById('bookSetMsg');
+    msg.textContent = '';
+
+    if (!dateFrom || !dateUntil) {
+      msg.style.color = 'var(--color-danger)';
+      msg.textContent = 'Selecciona las fechas.';
+      return;
+    }
+    if (dateUntil <= dateFrom) {
+      msg.style.color = 'var(--color-danger)';
+      msg.textContent = 'La fecha de fin debe ser posterior.';
+      return;
+    }
+
+    const btn = document.getElementById('btnSetBook');
+    btn.disabled = true;
+    try {
+      const res = await fetch(`/api/clubs/${clubId}/current-book`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ externalId: selectedBookId, dateFrom, dateUntil }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        msg.style.color = 'var(--color-danger)';
+        msg.textContent = data.error || 'Error al establecer el libro';
+        btn.disabled = false;
+        return;
+      }
+      clubData.currentBook = data;
+      closeBookModal();
+      document.getElementById('btnManageBook').style.display = 'inline-flex';
+      document.getElementById('btnRemoveBook').style.display = 'block';
+      document.getElementById('adminNoBookWidget').style.display = 'none';
+      renderCurrentBook(data);
+      showToast('📖 Libro del mes actualizado');
+    } catch (_) {
+      msg.style.color = 'var(--color-danger)';
+      msg.textContent = 'Error de red';
+      btn.disabled = false;
+    }
+  });
+
+  function resetBookSearch() {
+    selectedBookId = null;
+    document.getElementById('bookSearchInput').value       = '';
+    document.getElementById('bookSearchResults').innerHTML = '';
+    document.getElementById('bookSelected').style.display  = 'none';
+    document.getElementById('btnSetBook').disabled         = true;
+    document.getElementById('bookSetMsg').textContent      = '';
+  }
+
+  /* ══════════════════════════════════════════
+     THREADS
+  ══════════════════════════════════════════ */
+  async function loadThreads() {
+    try {
+      const res = await fetch(`/api/clubs/${clubId}/chats`, { credentials: 'include' });
+      if (!res.ok) throw new Error();
+      renderThreads(await res.json());
+    } catch (_) {
+      document.getElementById('threadsList').innerHTML =
+        '<div class="alert alert-danger">Error cargando hilos</div>';
+    }
+  }
+
+  function renderThreads(threads) {
+    const list  = document.getElementById('threadsList');
+    const empty = document.getElementById('threadsEmpty');
+    if (!threads.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    const muted = getMutedThreads();
+    list.innerHTML = threads.map(t => {
+      const isMuted = muted.includes(t.id);
+      return `
+        <div class="thread-item js-open-thread ${isMuted ? 'is-muted' : ''}"
+             data-chat-id="${t.id}" data-chat-title="${esc(t.title)}">
+          <div class="thread-item__icon">💬</div>
+          <div class="thread-item__body">
+            <div class="thread-item__title">${esc(t.title)}</div>
+            <div class="thread-item__meta">
+              ${t.messageCount} mensaje${t.messageCount !== 1 ? 's' : ''}
+              ${isMuted ? ' · <span style="color:var(--color-text-muted)">silenciado</span>' : ''}
+            </div>
+          </div>
+          <div class="thread-item__right">
+            <span class="badge ${t.isOpen ? 'badge-accent' : 'badge-neutral'}" style="font-size:.72rem;">
+              ${t.isOpen ? 'Abierto' : 'Cerrado'}
+            </span>
+            <button class="btn-mute js-mute-thread" data-thread-id="${t.id}"
+                    title="${isMuted ? 'Activar' : 'Silenciar'}">
+              ${isMuted ? '🔕' : '🔔'}
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── Silenciar hilos ── */
+  function getMutedThreads()     { try { return JSON.parse(localStorage.getItem('mutedThreads')||'[]'); } catch(_){ return []; } }
+  function saveMutedThreads(arr) { localStorage.setItem('mutedThreads', JSON.stringify(arr)); }
+
+  document.getElementById('threadsList').addEventListener('click', e => {
+    const muteBtn = e.target.closest('.js-mute-thread');
+    if (muteBtn) {
+      e.stopPropagation();
+      const id    = parseInt(muteBtn.dataset.threadId);
+      const muted = getMutedThreads();
+      const idx   = muted.indexOf(id);
+      if (idx === -1) { muted.push(id); showToast('🔕 Hilo silenciado'); }
+      else            { muted.splice(idx, 1); showToast('🔔 Notificaciones activadas'); }
+      saveMutedThreads(muted);
+      loadThreads();
+      return;
+    }
+    const card = e.target.closest('.js-open-thread');
+    if (card) openThread(parseInt(card.dataset.chatId), card.dataset.chatTitle);
+  });
+
+  /* ── Nuevo hilo ── */
+  document.getElementById('btnNewThread').addEventListener('click', () => {
+    document.getElementById('newThreadForm').style.display = 'flex';
+    document.getElementById('threadTitle').focus();
+  });
+  document.getElementById('btnCancelThread').addEventListener('click', () => {
+    document.getElementById('newThreadForm').style.display = 'none';
+    document.getElementById('threadTitle').value = '';
+  });
+  document.getElementById('btnCreateThread').addEventListener('click', async () => {
+    const title = document.getElementById('threadTitle').value.trim();
+    if (!title) return;
+    try {
+      const res = await fetch(`/api/clubs/${clubId}/chats`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title })
+      });
+      if (res.ok) {
+        document.getElementById('newThreadForm').style.display = 'none';
+        document.getElementById('threadTitle').value = '';
+        await loadThreads();
+        showToast('✔ Hilo creado');
+      }
+    } catch (_) {}
+  });
+
+  /* ══════════════════════════════════════════
+     MESSAGES
+  ══════════════════════════════════════════ */
+  async function openThread(chatId, chatTitle) {
+    activeChat = chatId;
+    document.getElementById('chatsSection').style.display    = 'none';
+    document.getElementById('messagesSection').style.display = 'block';
+    document.getElementById('threadTitleHeader').textContent = chatTitle;
+    document.getElementById('messagesList').innerHTML =
+      '<div style="text-align:center;padding:40px 0;"><span class="spinner"></span></div>';
+
+    try {
+      const res = await fetch(`/api/clubs/${clubId}/chats/${chatId}/messages`, { credentials: 'include' });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      renderMessages(data.messages || []);
+      if (clubData?.myRole) document.getElementById('msgInputArea').style.display = 'flex';
+    } catch (_) {
+      document.getElementById('messagesList').innerHTML =
+        '<div class="alert alert-danger">Error cargando mensajes</div>';
+    }
+  }
+
+  function renderMessages(messages) {
+    const list = document.getElementById('messagesList');
+    if (!messages.length) {
+      list.innerHTML = `
+        <div style="text-align:center;padding:40px 0;">
+          <div style="font-size:2rem;margin-bottom:8px;">💬</div>
+          <div style="font-size:.88rem;color:var(--color-text-muted);">Sé el primero en escribir.</div>
+        </div>`;
+      return;
+    }
+    list.innerHTML = messages.map(m => {
+      const isMe = isLoggedIn && m.user.id === myUserId;
+      return `
+        <div class="msg-row ${isMe ? 'msg-row--me' : ''}">
+          <div class="msg-avatar ${isMe ? 'msg-avatar--me' : ''}">
+            ${esc((m.user.displayName || '?')[0].toUpperCase())}
+          </div>
+          <div class="msg-content">
+            <div class="msg-name">${esc(m.user.displayName || 'Usuario')}</div>
+            <div class="msg-bubble ${isMe ? 'msg-bubble--me' : 'msg-bubble--other'}">${esc(m.content)}</div>
+          </div>
+        </div>`;
+    }).join('');
+    list.scrollTop = list.scrollHeight;
+  }
+
+  document.getElementById('btnBackThreads').addEventListener('click', () => {
+    document.getElementById('messagesSection').style.display = 'none';
+    document.getElementById('chatsSection').style.display    = 'block';
+    document.getElementById('msgInputArea').style.display    = 'none';
+    activeChat = null;
+  });
+
+  document.getElementById('btnSendMsg').addEventListener('click', sendMessage);
+  document.getElementById('msgInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  async function sendMessage() {
+    const input   = document.getElementById('msgInput');
+    const content = input.value.trim();
+    if (!content || !activeChat) return;
+    input.value = '';
+    try {
+      const res = await fetch(`/api/clubs/${clubId}/chats/${activeChat}/messages`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      if (res.ok) {
+        const res2 = await fetch(`/api/clubs/${clubId}/chats/${activeChat}/messages`, { credentials: 'include' });
+        if (res2.ok) renderMessages((await res2.json()).messages || []);
+      }
+    } catch (_) {}
+  }
+
+  /* ══════════════════════════════════════════
+     JOIN / LEAVE
+  ══════════════════════════════════════════ */
+  async function joinClub() {
+    try {
+      const res  = await fetch(`/api/clubs/${clubId}/join`, { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        showToast(data.status === 'requested' ? '📨 Solicitud enviada' : '✔ Te has unido al club');
+        await loadClub();
+      }
+    } catch (_) {}
+  }
+
+  async function leaveClub() {
+    try {
+      const res = await fetch(`/api/clubs/${clubId}/leave`, { method: 'DELETE', credentials: 'include' });
+      if (res.ok || res.status === 204) { showToast('Has abandonado el club'); await loadClub(); }
+    } catch (_) {}
+  }
+
+  loadClub();
+})();
+</script>
+{% endblock %}

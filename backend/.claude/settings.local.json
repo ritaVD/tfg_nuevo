@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(php bin/console doctrine:migrations:migrate --no-interaction)",
+      "Bash(php bin/console cache:clear)",
+      "Bash(php bin/console lint:twig templates/clubs/show.html.twig)",
+      "Bash(php:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3306\")",
+      "Read(//c/xampp/mysql/data/**)",
+      "Bash(\"C:/xampp/mysql/bin/mysqld.exe\" --console --datadir=\"C:/xampp/mysql/data\")",
+      "Bash(Start-Process \"C:/xampp/mysql/bin/mysqld.exe\" -ArgumentList \"--skip-grant-tables\",\"--skip-networking\",\"--console\",\"--datadir=C:/xampp/mysql/data\" -NoNewWindow)",
+      "Bash(\"C:/xampp/mysql/bin/mysqld.exe\" --skip-grant-tables --skip-networking --console --datadir=\"C:/xampp/mysql/data\")",
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root --protocol=pipe -e \"REPAIR TABLE mysql.proxies_priv;\")",
+      "Bash(\"C:/xampp/mysql/bin/mysqld.exe\" --skip-grant-tables --console --datadir=\"C:/xampp/mysql/data\")",
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root -h 127.0.0.1 -P 3306 --connect-timeout=5 -e \"REPAIR TABLE mysql.proxies_priv; SELECT 'OK';\")",
+      "Bash(C:/xampp/mysql/bin/mysql.exe:*)",
+      "Bash(taskkill /F /IM mysqld.exe)",
+      "Bash(rm -f \"C:/xampp/mysql/data/mysql/proxies_priv.MYI\" \"C:/xampp/mysql/data/mysql/proxies_priv.MYD\" \"C:/xampp/mysql/data/mysql/proxies_priv.frm\")",
+      "Bash(taskkill /IM mysqld.exe)",
+      "Bash(wmic process:*)",
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root -h 127.0.0.1 -P 3306 --connect-timeout=5 -e \"SELECT 'MariaDB is up';\")",
+      "Bash(sed:*)",
+      "Bash(rm:*)",
+      "Bash(grep -n \"^\\\\..*{\" \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\TFGdaw\\\\frontend\\\\src\\\\index.css\")",
+      "Bash(xargs grep:*)",
+      "Bash(Get-Content \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\TFGdaw\\\\var\\\\log\\\\dev.log\" -Tail 40)",
+      "Bash(curl:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(node:*)",
+      "Bash(powershell:*)"
+    ]
+  }
+}

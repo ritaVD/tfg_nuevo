@@ -1,0 +1,264 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Clubs de lectura — TFGdaw{% endblock %}
+
+{% block body %}
+<div class="main-content">
+
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-header__title">👥 Clubs de lectura</h1>
+      <p class="page-header__subtitle">Únete a comunidades lectoras o crea la tuya</p>
+    </div>
+    {% if app.user %}
+      <button class="btn btn-primary" onclick="toggleCreateForm()">+ Nuevo club</button>
+    {% endif %}
+  </div>
+
+  {# ── Create club panel (hidden by default) ── #}
+  {% if app.user %}
+  <div id="createPanel" style="display:none; margin-bottom:28px;">
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Crear nuevo club</span>
+        <button class="btn btn-secondary btn-sm" onclick="toggleCreateForm()">✕ Cancelar</button>
+      </div>
+      <div class="card-body">
+        <form id="createClubForm" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Nombre <span style="color:var(--color-danger)">*</span></label>
+            <input id="clubName" class="form-control" required maxlength="80" placeholder="Mi club de lectura">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Visibilidad</label>
+            <select id="clubVis" class="form-control">
+              <option value="public">🌐 Público</option>
+              <option value="private">🔒 Privado (con solicitud)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;grid-column:1/-1;">
+            <label class="form-label">Descripción</label>
+            <textarea id="clubDesc" class="form-control" rows="2" placeholder="Describe de qué trata tu club…"></textarea>
+          </div>
+          <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;">
+            <button type="submit" class="btn btn-primary">Crear club</button>
+            <p id="createMsg" class="text-sm" style="margin:0;"></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="clubs-layout">
+
+    {# ── Left: club list ── #}
+    <div>
+      <div style="margin-bottom:16px;">
+        <input id="searchInput" class="form-control" placeholder="🔍 Filtrar clubs por nombre…" oninput="filterClubs()">
+      </div>
+
+      <div id="loadingClubs" class="loading-state">
+        <span class="spinner"></span> Cargando clubs…
+      </div>
+
+      <div id="clubsList" style="display:flex;flex-direction:column;gap:12px;"></div>
+
+      <div id="clubsEmpty" class="empty-state" style="display:none;">
+        <div class="empty-state__icon">📭</div>
+        <div class="empty-state__title">No hay clubs todavía</div>
+        <div class="empty-state__desc">Sé el primero en crear uno.</div>
+      </div>
+
+      <p id="clubsError" class="alert alert-danger" style="display:none;"></p>
+    </div>
+
+    {# ── Right: info sidebar (only for guests) ── #}
+    {% if not app.user %}
+    <div class="clubs-sidebar">
+      <div class="card">
+        <div class="card-body">
+          <div style="text-align:center;font-size:2rem;margin-bottom:10px;">📖</div>
+          <p style="font-size:.9rem;color:var(--color-text-muted);text-align:center;margin-bottom:16px;">
+            Inicia sesión para unirte a clubs, crear el tuyo y participar en los debates.
+          </p>
+          <a href="{{ path('app_login') }}" class="btn btn-primary btn-block">Entrar</a>
+          <a href="{{ path('app_register') }}" class="btn btn-secondary btn-block mt-2">Crear cuenta</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const isLoggedIn = {{ app.user ? 'true' : 'false' }};
+  let allClubs = [];
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function visibilityBadge(v) {
+    return v === 'public'
+      ? '<span class="badge badge-accent">🌐 Público</span>'
+      : '<span class="badge badge-neutral">🔒 Privado</span>';
+  }
+
+  function roleBadge(role) {
+    if (role === 'admin')  return '<span class="badge badge-primary">Administrador</span>';
+    if (role === 'member') return '<span class="badge badge-neutral">Miembro</span>';
+    return '';
+  }
+
+  function renderClubs(clubs) {
+    const list  = document.getElementById('clubsList');
+    const empty = document.getElementById('clubsEmpty');
+    list.innerHTML = '';
+
+    if (!clubs.length) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    clubs.forEach(club => {
+      const card = document.createElement('div');
+      card.className = 'club-card';
+      card.dataset.name = (club.name || '').toLowerCase();
+
+      const bookHtml = club.currentBook
+        ? `<div class="club-card__book">📖 Libro del mes: <strong>${esc(club.currentBook.title)}</strong></div>`
+        : '';
+
+      card.innerHTML = `
+        <div class="club-card__header">
+          <div class="club-card__name">${esc(club.name ?? '')}</div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            ${visibilityBadge(club.visibility)}
+            ${club.userRole ? roleBadge(club.userRole) : ''}
+          </div>
+        </div>
+        ${club.description ? `<p class="club-card__desc">${esc(club.description)}</p>` : ''}
+        <div class="club-card__meta">
+          <span>👤 ${club.memberCount ?? 0} miembro${(club.memberCount ?? 0) !== 1 ? 's' : ''}</span>
+        </div>
+        ${bookHtml}
+        <div class="club-card__footer">
+          ${club.visibility === 'public' || club.myRole
+            ? `<a href="/clubs/${club.id}" class="btn btn-secondary btn-sm">Ver club →</a>`
+            : isLoggedIn
+              ? `<button class="btn btn-primary btn-sm js-join-club" data-club-id="${club.id}" data-club-name="${esc(club.name ?? '')}">Solicitar entrada</button>`
+              : `<a href="{{ path('app_login') }}" class="btn btn-primary btn-sm">Entrar para solicitar</a>`
+          }
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  }
+
+  /* Toast */
+  let toastTimer = null;
+  function showToast(msg) {
+    let el = document.getElementById('toast');
+    if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
+    el.textContent = msg;
+    el.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), 3000);
+  }
+
+  /* Delegación: botón "Solicitar entrada" en tarjetas */
+  document.getElementById('clubsList').addEventListener('click', async e => {
+    const btn = e.target.closest('.js-join-club');
+    if (!btn) return;
+    btn.disabled = true;
+    try {
+      const res  = await fetch(`/api/clubs/${btn.dataset.clubId}/join`, { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        showToast(data.status === 'requested' ? `📨 Solicitud enviada a "${btn.dataset.clubName}"` : '✔ Unido');
+        await loadClubs();
+      } else {
+        showToast(data.error || 'Error al solicitar');
+        btn.disabled = false;
+      }
+    } catch (_) { btn.disabled = false; }
+  });
+
+  window.filterClubs = function() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = allClubs.filter(c => (c.name || '').toLowerCase().includes(q));
+    renderClubs(filtered);
+  };
+
+  async function loadClubs() {
+    const loading = document.getElementById('loadingClubs');
+    const error   = document.getElementById('clubsError');
+    loading.style.display = 'flex';
+    error.style.display   = 'none';
+
+    try {
+      const res = await fetch('/api/clubs', { credentials: 'include' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      allClubs = await res.json();
+      renderClubs(allClubs);
+    } catch (e) {
+      error.textContent  = 'Error cargando clubs: ' + e.message;
+      error.style.display = 'block';
+    } finally {
+      loading.style.display = 'none';
+    }
+  }
+
+  window.toggleCreateForm = function() {
+    const panel = document.getElementById('createPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  };
+
+  const form = document.getElementById('createClubForm');
+  if (form) {
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const msg = document.getElementById('createMsg');
+      msg.textContent = '';
+
+      try {
+        const res = await fetch('/api/clubs', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name:        document.getElementById('clubName').value,
+            description: document.getElementById('clubDesc').value,
+            visibility:  document.getElementById('clubVis').value,
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          msg.style.color = 'var(--color-danger)';
+          msg.textContent = data.error || ('Error HTTP ' + res.status);
+          return;
+        }
+
+        msg.style.color = 'var(--color-success)';
+        msg.textContent = '✔ Club creado';
+        form.reset();
+        setTimeout(() => { toggleCreateForm(); msg.textContent = ''; }, 800);
+        await loadClubs();
+      } catch (e) {
+        msg.style.color = 'var(--color-danger)';
+        msg.textContent = 'Error: ' + e.message;
+      }
+    });
+  }
+
+  loadClubs();
+})();
+</script>
+{% endblock %}

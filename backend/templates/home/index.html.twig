@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}TFGdaw — Clubs de lectura{% endblock %}
+
+{% block body %}
+
+  <section class="hero">
+    <span class="hero__eyebrow">Plataforma de lectura</span>
+    <h1 class="hero__title">
+      Lee más.<br>
+      Comparte <span>tus lecturas</span>.
+    </h1>
+    <p class="hero__desc">
+      Organiza tus libros en estanterías personales, únete a clubs de lectura
+      y comenta cada capítulo con otros lectores.
+    </p>
+    <div class="hero__actions">
+      {% if app.user %}
+        <a href="/clubs" class="btn btn-primary btn-lg">Explorar clubs</a>
+        <a href="/shelves" class="btn btn-secondary btn-lg">Mis estanterías</a>
+      {% else %}
+        <a href="{{ path('app_register') }}" class="btn btn-primary btn-lg">Crear cuenta gratis</a>
+        <a href="/clubs" class="btn btn-secondary btn-lg">Explorar clubs</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="features__grid">
+
+      <div class="feature-card">
+        <div class="feature-card__icon">🔍</div>
+        <h3 class="feature-card__title">Busca cualquier libro</h3>
+        <p class="feature-card__desc">
+          Accede a millones de títulos a través de Google Books.
+          Filtra por autor, género, idioma o ISBN.
+        </p>
+        <a href="{{ path('app_books') }}" class="btn btn-secondary btn-sm">Buscar libros →</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card__icon">🗂️</div>
+        <h3 class="feature-card__title">Estanterías personales</h3>
+        <p class="feature-card__desc">
+          Crea tus propias estanterías y marca cada libro como
+          "quiero leer", "leyendo" o "leído".
+        </p>
+        {% if app.user %}
+          <a href="/shelves" class="btn btn-secondary btn-sm">Mis estanterías →</a>
+        {% else %}
+          <a href="{{ path('app_register') }}" class="btn btn-secondary btn-sm">Empezar →</a>
+        {% endif %}
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-card__icon">👥</div>
+        <h3 class="feature-card__title">Clubs de lectura</h3>
+        <p class="feature-card__desc">
+          Únete a clubs públicos o crea el tuyo. Cada club tiene un
+          libro del mes y chats por capítulos para debatir.
+        </p>
+        <a href="/clubs" class="btn btn-secondary btn-sm">Ver clubs →</a>
+      </div>
+
+    </div>
+  </section>
+
+{% endblock %}

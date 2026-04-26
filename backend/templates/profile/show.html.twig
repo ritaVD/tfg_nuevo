@@ -1,0 +1,250 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ profileUser.displayName ?: profileUser.email }} — TFGdaw{% endblock %}
+
+{% block body %}
+<div class="main-content">
+  <div class="public-profile">
+
+    {# ── Header ── #}
+    <div class="public-profile__header">
+      {% if profileUser.avatar %}
+        <img class="public-profile__avatar"
+             src="/uploads/avatars/{{ profileUser.avatar }}"
+             alt="Avatar">
+      {% else %}
+        <img class="public-profile__avatar"
+             src="https://api.dicebear.com/7.x/initials/svg?seed={{ (profileUser.displayName ?: profileUser.email)|url_encode }}&radius=50"
+             alt="Avatar">
+      {% endif %}
+
+      <div class="public-profile__info">
+        <h1 class="public-profile__name">
+          {{ profileUser.displayName ?: profileUser.email }}
+          {% if isPrivate %}
+            <span class="badge badge-neutral" style="font-size:.65rem;vertical-align:middle;">🔒 Privado</span>
+          {% endif %}
+        </h1>
+
+        {% if showContent and profileUser.bio %}
+          <p class="public-profile__bio">{{ profileUser.bio }}</p>
+        {% endif %}
+
+        <div class="public-profile__stats">
+          <button class="public-profile__stat"
+                  {% if showContent %}data-modal="followers-modal"{% endif %}>
+            <span class="public-profile__stat-num" id="followers-count">{{ followersCount }}</span>
+            <span class="public-profile__stat-label">seguidores</span>
+          </button>
+          <button class="public-profile__stat"
+                  {% if showContent %}data-modal="following-modal"{% endif %}>
+            <span class="public-profile__stat-num" id="following-count">{{ followingCount }}</span>
+            <span class="public-profile__stat-label">siguiendo</span>
+          </button>
+        </div>
+      </div>
+
+      {# ── Follow button ── #}
+      {% if app.user and app.user.id != profileUser.id %}
+        <div class="public-profile__actions">
+          {% if followStatus == 'accepted' %}
+            <button id="follow-btn" class="btn btn-secondary"
+                    data-user-id="{{ profileUser.id }}" data-status="accepted">
+              ✓ Siguiendo
+            </button>
+          {% elseif followStatus == 'pending' %}
+            <button id="follow-btn" class="btn btn-ghost"
+                    data-user-id="{{ profileUser.id }}" data-status="pending">
+              ⏳ Solicitud enviada
+            </button>
+          {% else %}
+            <button id="follow-btn" class="btn btn-primary"
+                    data-user-id="{{ profileUser.id }}" data-status="none">
+              Seguir
+            </button>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    {# ── Private locked state ── #}
+    {% if isPrivate and not showContent %}
+      <div class="public-profile__locked">
+        <div class="public-profile__locked-icon">🔒</div>
+        <h2 class="public-profile__locked-title">Esta cuenta es privada</h2>
+        <p class="public-profile__locked-desc">
+          Sigue a este usuario para ver sus estanterías y clubs.
+        </p>
+      </div>
+
+    {# ── Public content ── #}
+    {% else %}
+      <div class="public-profile__body">
+
+        {% if shelves is not null %}
+          <div class="profile-section">
+            <div class="profile-section__header">
+              <span class="profile-section__icon">📚</span>
+              <span class="profile-section__title">Estanterías</span>
+            </div>
+            <div class="profile-section__body">
+              {% if shelves is empty %}
+                <p class="text-muted text-sm">No tiene estanterías todavía.</p>
+              {% else %}
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                  {% for shelf in shelves %}
+                    <span class="badge badge-accent" style="font-size:.85rem;padding:6px 14px;">
+                      {{ shelf.name }}
+                    </span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if clubs is not null %}
+          <div class="profile-section" style="margin-top:1rem;">
+            <div class="profile-section__header">
+              <span class="profile-section__icon">👥</span>
+              <span class="profile-section__title">Clubs</span>
+            </div>
+            <div class="profile-section__body">
+              {% if clubs is empty %}
+                <p class="text-muted text-sm">No pertenece a ningún club todavía.</p>
+              {% else %}
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  {% for club in clubs %}
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border);">
+                      <span style="font-weight:600;font-size:.9rem;">{{ club.club.name }}</span>
+                      <span class="badge {{ club.role == 'admin' ? 'badge-primary' : 'badge-neutral' }}">
+                        {{ club.role == 'admin' ? 'Admin' : 'Miembro' }}
+                      </span>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% if shelves is null and clubs is null and showContent %}
+          <div class="empty-state">
+            <div class="empty-state__icon">🔐</div>
+            <p class="empty-state__title">Contenido privado</p>
+            <p class="empty-state__desc">Este usuario no comparte su actividad.</p>
+          </div>
+        {% endif %}
+
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ── Modales ── #}
+<div class="modal-backdrop" id="followers-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-box__header">
+      <span class="modal-box__title">Seguidores</span>
+      <button class="modal-box__close" data-close="followers-modal">✕</button>
+    </div>
+    <div class="modal-box__body" id="followers-list"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="following-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-box__header">
+      <span class="modal-box__title">Siguiendo</span>
+      <button class="modal-box__close" data-close="following-modal">✕</button>
+    </div>
+    <div class="modal-box__body" id="following-list"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const userId = {{ profileUser.id }};
+
+  /* ── Follow button ── */
+  const btn = document.getElementById('follow-btn');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const status = btn.dataset.status;
+      btn.disabled = true;
+
+      // Cancel pending request or unfollow
+      if (status === 'accepted' || status === 'pending') {
+        const res  = await fetch(`/api/users/${userId}/follow`, { method: 'DELETE', credentials: 'include' });
+        const data = await res.json();
+        if (res.ok) {
+          btn.dataset.status   = 'none';
+          btn.textContent      = 'Seguir';
+          btn.className        = 'btn btn-primary';
+          document.getElementById('followers-count').textContent = data.followers;
+        }
+      } else {
+        // Send follow / request
+        const res  = await fetch(`/api/users/${userId}/follow`, { method: 'POST', credentials: 'include' });
+        const data = await res.json();
+        if (res.ok) {
+          if (data.status === 'pending') {
+            btn.dataset.status = 'pending';
+            btn.textContent    = '⏳ Solicitud enviada';
+            btn.className      = 'btn btn-ghost';
+          } else {
+            btn.dataset.status = 'accepted';
+            btn.textContent    = '✓ Siguiendo';
+            btn.className      = 'btn btn-secondary';
+            document.getElementById('followers-count').textContent = data.followers;
+          }
+        }
+      }
+
+      btn.disabled = false;
+    });
+  }
+
+  /* ── User list modals ── */
+  async function loadUserList(endpoint, containerId) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = '<div class="loading-state"><div class="spinner" style="width:28px;height:28px;"></div></div>';
+    try {
+      const res  = await fetch(`/api/users/${userId}/${endpoint}`, { credentials: 'include' });
+      const list = await res.json();
+      if (!list.length) {
+        el.innerHTML = '<p class="text-muted text-sm" style="padding:1rem 0.875rem;">Ninguno todavía.</p>';
+        return;
+      }
+      el.innerHTML = list.map(u => `
+        <a href="/usuarios/${u.id}" class="user-list-item">
+          <img class="user-list-item__avatar"
+               src="${u.avatar ? '/uploads/avatars/'+u.avatar : 'https://api.dicebear.com/7.x/initials/svg?seed='+encodeURIComponent(u.displayName||u.email)+'&radius=50'}"
+               alt="">
+          <span class="user-list-item__name">${u.displayName || u.email}</span>
+        </a>`).join('');
+    } catch (_) {
+      el.innerHTML = '<p class="text-muted text-sm" style="padding:1rem;">Error al cargar.</p>';
+    }
+  }
+
+  document.querySelectorAll('[data-modal]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.modal;
+      document.getElementById(id).style.display = 'flex';
+      if (id === 'followers-modal') loadUserList('followers', 'followers-list');
+      else loadUserList('following', 'following-list');
+    });
+  });
+
+  document.querySelectorAll('[data-close]').forEach(btn => {
+    btn.addEventListener('click', () => document.getElementById(btn.dataset.close).style.display = 'none');
+  });
+
+  document.querySelectorAll('.modal-backdrop').forEach(b => {
+    b.addEventListener('click', e => { if (e.target === b) b.style.display = 'none'; });
+  });
+})();
+</script>
+{% endblock %}

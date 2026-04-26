@@ -1,0 +1,397 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mis estanterías — TFGdaw{% endblock %}
+
+{% block body %}
+<div class="main-content">
+
+{% if not app.user %}
+  <div class="empty-state">
+    <div class="empty-state__icon">🔒</div>
+    <div class="empty-state__title">Acceso restringido</div>
+    <div class="empty-state__desc" style="margin-bottom:20px;">Necesitas iniciar sesión para ver tus estanterías.</div>
+    <a href="{{ path('app_login') }}" class="btn btn-primary">Iniciar sesión</a>
+  </div>
+
+{% else %}
+
+  <div class="page-header">
+    <div class="page-header__left">
+      <h1 class="page-header__title">🗂️ Mis estanterías</h1>
+      <p class="page-header__subtitle">Organiza y gestiona tu colección de libros</p>
+    </div>
+    <a href="{{ path('app_books') }}" class="btn btn-secondary">🔍 Buscar libros</a>
+  </div>
+
+  <div class="shelves-layout">
+
+    {# ── Sidebar ── #}
+    <aside class="shelf-sidebar">
+      <div class="shelf-sidebar__header">Estanterías</div>
+      <ul class="shelf-sidebar__list" id="shelfNav"></ul>
+      <div class="shelf-sidebar__add">
+        <form id="createShelfForm" style="display:flex;gap:6px;">
+          <input id="shelfNameInput" class="form-control form-control-sm" placeholder="Nueva estantería…" required maxlength="80">
+          <button type="submit" class="btn btn-primary btn-sm" title="Crear">+</button>
+        </form>
+        <p id="createShelfMsg" class="text-sm mt-1" style="margin-top:6px;"></p>
+      </div>
+    </aside>
+
+    {# ── Main panel ── #}
+    <main id="shelfPanel">
+      <div class="loading-state" id="panelLoading">
+        <span class="spinner"></span> Cargando…
+      </div>
+    </main>
+
+  </div>
+
+{% endif %}
+</div>
+
+<!-- ===================== MOVE MODAL ===================== -->
+<div id="moveModal" class="shelf-modal" aria-hidden="true">
+  <div class="shelf-modal__backdrop" id="moveModalBackdrop"></div>
+  <div class="shelf-modal__box" role="dialog" aria-modal="true">
+    <div class="shelf-modal__header">
+      <div>
+        <p class="shelf-modal__label">Mover libro</p>
+        <p class="shelf-modal__book-title" id="moveModalBookTitle"></p>
+      </div>
+      <button class="shelf-modal__close" id="moveModalClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="shelf-modal__body">
+      <p class="shelf-modal__section-title">Selecciona la estantería destino</p>
+      <div id="moveShelfList" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <p id="moveModalMsg" class="shelf-modal__msg"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TOAST ===================== -->
+<div id="toast" class="toast" aria-live="polite"></div>
+
+{% if app.user %}
+<script>
+(function () {
+  let shelves  = [];
+  let activeId = null;
+  let moveBookId = null;
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-visible'), 3000);
+  }
+
+  /* ============================================================
+     MOVE MODAL
+     ============================================================ */
+  function openMoveModal(bookId, bookTitle) {
+    moveBookId = bookId;
+    document.getElementById('moveModalBookTitle').textContent = bookTitle;
+    document.getElementById('moveModalMsg').textContent = '';
+
+    const other = shelves.filter(s => s.id !== activeId);
+    const list  = document.getElementById('moveShelfList');
+
+    if (!other.length) {
+      list.innerHTML = '<p class="text-muted text-sm">No tienes más estanterías. Crea una primero.</p>';
+    } else {
+      list.innerHTML = other.map(s => `
+        <button class="btn btn-secondary btn-sm" style="text-align:left;justify-content:flex-start;"
+                data-shelf-id="${s.id}">
+          📚 ${esc(s.name)}
+        </button>
+      `).join('');
+
+      list.querySelectorAll('button[data-shelf-id]').forEach(btn => {
+        btn.addEventListener('click', () => doMove(parseInt(btn.dataset.shelfId)));
+      });
+    }
+
+    const modal = document.getElementById('moveModal');
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMoveModal() {
+    document.getElementById('moveModal').classList.remove('is-open');
+    document.getElementById('moveModal').setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    moveBookId = null;
+  }
+
+  async function doMove(targetShelfId) {
+    const msg = document.getElementById('moveModalMsg');
+    try {
+      const res = await fetch(`/api/shelves/${activeId}/books/${moveBookId}/move`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetShelfId })
+      });
+      if (res.ok) {
+        closeMoveModal();
+        await loadBooks(activeId);
+        const dest = shelves.find(s => s.id === targetShelfId);
+        showToast(`✔ Libro movido a "${dest?.name ?? 'la estantería'}"`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        msg.textContent = data.error || 'Error al mover';
+        msg.className = 'shelf-modal__msg error';
+      }
+    } catch (_) {
+      msg.textContent = 'Error de red';
+      msg.className = 'shelf-modal__msg error';
+    }
+  }
+
+  document.getElementById('moveModalClose').addEventListener('click', closeMoveModal);
+  document.getElementById('moveModalBackdrop').addEventListener('click', closeMoveModal);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMoveModal(); });
+
+  /* ============================================================
+     SIDEBAR
+     ============================================================ */
+  function renderNav() {
+    const nav = document.getElementById('shelfNav');
+    nav.innerHTML = '';
+    shelves.forEach(shelf => {
+      const li = document.createElement('li');
+      li.className = 'shelf-nav-item' + (shelf.id === activeId ? ' is-active' : '');
+      li.innerHTML = `
+        <span class="shelf-nav-item__icon">📚</span>
+        <span class="shelf-nav-item__name">${esc(shelf.name)}</span>
+        <span class="shelf-nav-item__count" id="count-${shelf.id}">…</span>
+        ${shelf.id !== shelves[0]?.id
+          ? `<button class="btn btn-icon" title="Eliminar" data-delete-id="${shelf.id}"
+               style="background:none;border:none;color:var(--color-danger);cursor:pointer;padding:2px 4px;">✕</button>`
+          : ''}
+      `;
+      li.addEventListener('click', e => {
+        if (e.target.closest('button')) return;
+        selectShelf(shelf.id);
+      });
+      nav.appendChild(li);
+    });
+  }
+
+  function updateCount(shelfId, n) {
+    const el = document.getElementById('count-' + shelfId);
+    if (el) el.textContent = n;
+  }
+
+  /* Delegación para botones de eliminar estantería */
+  document.getElementById('shelfNav').addEventListener('click', e => {
+    const btn = e.target.closest('[data-delete-id]');
+    if (!btn) return;
+    e.stopPropagation();
+    deleteShelf(parseInt(btn.dataset.deleteId));
+  });
+
+  async function selectShelf(id) {
+    activeId = id;
+    renderNav();
+    await loadBooks(id);
+  }
+
+  /* ============================================================
+     LOAD SHELVES
+     ============================================================ */
+  async function loadShelves() {
+    try {
+      const res = await fetch('/api/shelves', { credentials: 'include' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      shelves = await res.json();
+      renderNav();
+      if (shelves.length) {
+        selectShelf(shelves[0].id);
+      } else {
+        showPanel(`
+          <div class="shelf-panel__empty">
+            <div class="shelf-panel__empty-icon">📭</div>
+            <div class="shelf-panel__empty-text">Aún no tienes estanterías. Crea una desde el panel lateral.</div>
+          </div>`);
+      }
+    } catch (e) {
+      showPanel(`<div class="alert alert-danger">Error cargando estanterías: ${esc(e.message)}</div>`);
+    }
+  }
+
+  /* ============================================================
+     LOAD BOOKS
+     ============================================================ */
+  async function loadBooks(shelfId) {
+    const panel = document.getElementById('shelfPanel');
+    panel.innerHTML = '<div class="loading-state"><span class="spinner"></span> Cargando libros…</div>';
+    try {
+      const res  = await fetch(`/api/shelves/${shelfId}/books`, { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
+      const books = Array.isArray(data) ? data : (data.books || []);
+      updateCount(shelfId, books.length);
+      renderBooks(shelfId, books);
+    } catch (e) {
+      panel.innerHTML = `<div class="alert alert-danger">Error: ${esc(e.message)}</div>`;
+    }
+  }
+
+  /* ============================================================
+     RENDER BOOKS
+     ============================================================ */
+  function renderBooks(shelfId, books) {
+    const shelf = shelves.find(s => s.id === shelfId);
+    let html = `<div class="card" style="margin-bottom:0;">
+      <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📚 ${esc(shelf?.name ?? 'Estantería')}</span>
+        <span class="text-muted text-sm">${books.length} libro${books.length !== 1 ? 's' : ''}</span>
+      </div>`;
+
+    if (!books.length) {
+      html += `
+        <div class="shelf-panel__empty">
+          <div class="shelf-panel__empty-icon">📖</div>
+          <div class="shelf-panel__empty-text">Esta estantería está vacía.<br>
+            <a href="{{ path('app_books') }}" class="text-accent">Busca libros para añadir →</a>
+          </div>
+        </div>`;
+    } else {
+      html += `<div class="card-body"><div class="shelf-book-list" id="bookList-${shelfId}">`;
+      books.forEach(item => {
+        const b       = item.book || item;
+        const cover   = b.coverUrl || b.thumbnail || 'https://placehold.co/56x84/f5f0e8/9b7ed4?text=📖';
+        const authors = Array.isArray(b.authors) ? b.authors.join(', ') : (b.authors || 'Autor desconocido');
+        const bookId  = item.shelfBookId ?? item.id ?? b.id;
+        const title   = b.title || 'Sin título';
+
+        html += `
+          <div class="shelf-book" id="shelf-book-${bookId}">
+            <img class="shelf-book__cover"
+                 src="${esc(cover)}" alt="Portada" loading="lazy"
+                 onerror="this.src='https://placehold.co/56x84/f5f0e8/9b7ed4?text=📖'">
+            <div class="shelf-book__body">
+              <div class="shelf-book__title">${esc(title)}</div>
+              <div class="shelf-book__author">${esc(authors)}</div>
+              <div class="shelf-book__actions">
+                <button class="btn btn-secondary btn-sm js-move-book"
+                        data-book-id="${bookId}"
+                        data-book-title="${esc(title)}">↔ Mover</button>
+                <button class="btn btn-danger btn-sm js-remove-book"
+                        data-shelf-id="${shelfId}"
+                        data-book-id="${bookId}">✕ Quitar</button>
+              </div>
+            </div>
+          </div>`;
+      });
+      html += `</div></div>`;
+    }
+    html += '</div>';
+
+    const panel = document.getElementById('shelfPanel');
+    panel.innerHTML = html;
+
+    /* Delegación de eventos para mover y quitar */
+    panel.addEventListener('click', e => {
+      const moveBtn = e.target.closest('.js-move-book');
+      if (moveBtn) {
+        openMoveModal(parseInt(moveBtn.dataset.bookId), moveBtn.dataset.bookTitle);
+        return;
+      }
+      const removeBtn = e.target.closest('.js-remove-book');
+      if (removeBtn) {
+        removeBook(parseInt(removeBtn.dataset.shelfId), parseInt(removeBtn.dataset.bookId));
+      }
+    });
+  }
+
+  function showPanel(html) {
+    document.getElementById('shelfPanel').innerHTML = html;
+  }
+
+  /* ============================================================
+     ACTIONS
+     ============================================================ */
+  async function removeBook(shelfId, bookId) {
+    try {
+      const res = await fetch(`/api/shelves/${shelfId}/books/${bookId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok || res.status === 204) {
+        const el = document.getElementById('shelf-book-' + bookId);
+        if (el) el.remove();
+        await loadBooks(shelfId);
+        showToast('Libro eliminado de la estantería');
+      }
+    } catch (_) {}
+  }
+
+  async function deleteShelf(shelfId) {
+    try {
+      const res = await fetch(`/api/shelves/${shelfId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok || res.status === 204) {
+        const name = shelves.find(s => s.id === shelfId)?.name ?? 'Estantería';
+        shelves = shelves.filter(s => s.id !== shelfId);
+        if (activeId === shelfId) activeId = shelves[0]?.id || null;
+        renderNav();
+        if (activeId) selectShelf(activeId);
+        else showPanel(`<div class="shelf-panel__empty"><div class="shelf-panel__empty-icon">📭</div><div class="shelf-panel__empty-text">Crea una estantería para empezar.</div></div>`);
+        showToast(`"${name}" eliminada`);
+      }
+    } catch (_) {}
+  }
+
+  /* ── Crear estantería ── */
+  document.getElementById('createShelfForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const input = document.getElementById('shelfNameInput');
+    const msg   = document.getElementById('createShelfMsg');
+    msg.textContent = '';
+
+    try {
+      const res  = await fetch('/api/shelves', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: input.value.trim() })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        msg.style.color = 'var(--color-danger)';
+        msg.textContent = data.error || 'Error al crear';
+        return;
+      }
+      input.value = '';
+      await loadShelves();
+      if (data.id) selectShelf(data.id);
+      showToast(`✔ Estantería "${data.name}" creada`);
+      setTimeout(() => msg.textContent = '', 100);
+    } catch (err) {
+      msg.style.color = 'var(--color-danger)';
+      msg.textContent = 'Error: ' + err.message;
+    }
+  });
+
+  loadShelves();
+})();
+</script>
+{% endif %}
+{% endblock %}

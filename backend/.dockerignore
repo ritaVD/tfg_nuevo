@@ -1,0 +1,12 @@
+vendor
+var
+.git
+tests
+*.md
+*.pdf
+*.docx
+.env.dev
+.env.test
+compose.yaml
+compose.override.yaml
+phpunit.dist.xml
