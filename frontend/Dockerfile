@@ -10,16 +10,15 @@ RUN npm ci
 # Copiar fuentes y compilar
 # Se sobreescribe outDir para que el artefacto quede dentro del contexto Docker
 COPY . .
-RUN npx tsc -b && npx vite build --outDir /dist
+RUN npx vite build --outDir /dist
 
 # ── Stage 2: runtime ───────────────────────────────────────────────────────────
 FROM nginx:1.27-alpine
 
-# Configuración Nginx para SPA (React Router)
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# Plantilla de configuración: Railway inyecta $PORT en tiempo de ejecución
+COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Artefactos de la build
 COPY --from=builder /dist /usr/share/nginx/html
 
-EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
