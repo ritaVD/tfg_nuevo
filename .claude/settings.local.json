@@ -20,7 +20,9 @@
       "Bash(grep -E \"\\\\.php$\")",
       "Bash(pandoc --version)",
       "Bash(npx --yes md-to-pdf --version)",
-      "Bash(npx md-to-pdf *)"
+      "Bash(npx md-to-pdf *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
