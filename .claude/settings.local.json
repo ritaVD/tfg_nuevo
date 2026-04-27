@@ -22,7 +22,8 @@
       "Bash(npx --yes md-to-pdf --version)",
       "Bash(npx md-to-pdf *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }
