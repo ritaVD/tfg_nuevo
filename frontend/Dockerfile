@@ -10,7 +10,7 @@ RUN npm ci
 # Copiar fuentes y compilar
 # Se sobreescribe outDir para que el artefacto quede dentro del contexto Docker
 COPY . .
-RUN npx vite build --outDir /dist
+RUN npx vite build --outDir dist && echo "=== BUILD OK ===" && ls dist && ls dist/assets | head -5
 
 # ── Stage 2: runtime ───────────────────────────────────────────────────────────
 FROM nginx:1.27-alpine
@@ -19,6 +19,6 @@ FROM nginx:1.27-alpine
 COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
 
 # Artefactos de la build
-COPY --from=builder /dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]
