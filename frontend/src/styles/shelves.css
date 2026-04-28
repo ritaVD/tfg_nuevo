@@ -906,7 +906,7 @@
 
   .shelf-nav-item {
     flex: 1 0 auto;
-    min-width: 120px;
+    min-width: 100px;
     border: 1px solid var(--color-border-light);
     border-radius: var(--radius-pill);
     padding: 0.4rem 0.875rem;
@@ -952,5 +952,11 @@
 
   .shelves-outer {
     padding: 0.875rem;
+  }
+
+  .shelf-nav-item {
+    min-width: 80px;
+    padding: 0.35rem 0.625rem;
+    font-size: 0.82rem;
   }
 }

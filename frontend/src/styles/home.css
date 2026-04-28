@@ -399,6 +399,14 @@
   .features {
     padding: 3rem 1rem;
   }
+  .home-feed__header {
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+  .home-feed__subtitle {
+    margin-left: 0;
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {

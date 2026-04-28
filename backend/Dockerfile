@@ -35,7 +35,8 @@ COPY . .
 RUN echo "APP_ENV=prod" > .env.local
 
 RUN mkdir -p var/cache var/log \
-    && chown -R www-data:www-data var/
+    && mkdir -p public/uploads/avatars public/uploads/posts \
+    && chown -R www-data:www-data var/ public/uploads/
 
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
     && echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini \

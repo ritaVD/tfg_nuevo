@@ -888,7 +888,10 @@
   color: var(--color-text-muted);
   margin-bottom: 0.2rem;
   padding-left: 0.2rem;
+  text-decoration: none;
+  display: block;
 }
+a.wapp-name--link:hover { color: var(--color-accent); text-decoration: underline; }
 
 .wapp-row--me .wapp-name {
   display: none;
@@ -1049,7 +1052,10 @@
   font-weight: 700;
   color: var(--color-text);
   letter-spacing: -0.015em;
+  text-decoration: none;
+  display: block;
 }
+a.request-item__name--link:hover { color: var(--color-accent); text-decoration: underline; }
 
 .request-item__date {
   font-size: 0.775rem;
@@ -1180,6 +1186,35 @@
 
   .ch-hero__name {
     font-size: 1.75rem;
+  }
+
+  .ch-hero__actions {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .ch-main {
+    padding: 1.25rem 1rem;
+    gap: 1.25rem;
+  }
+
+  .ch-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+
+  .ch-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ch-tab,
+  .tab-btn {
+    flex-shrink: 0;
+    padding: 0.65rem 0.875rem;
+    font-size: 0.82rem;
   }
 
   .ch-sidebar {

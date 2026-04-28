@@ -125,7 +125,7 @@ export default function PublicProfilePage() {
   const isOwnProfile = me?.id === profile.id
   const name = profile.displayName || `Usuario #${profile.id}`
   const avatarSrc = profile.avatar
-    ? (profile.avatar.startsWith('http') ? profile.avatar : `/uploads/${profile.avatar}`)
+    ? (profile.avatar.startsWith('http') ? profile.avatar : `/uploads/avatars/${profile.avatar}`)
     : dicebear(name)
 
   return (
@@ -320,7 +320,7 @@ export default function PublicProfilePage() {
                 >
                   <img
                     src={u.avatar
-                      ? (u.avatar.startsWith('http') ? u.avatar : `/uploads/${u.avatar}`)
+                      ? (u.avatar.startsWith('http') ? u.avatar : `/uploads/avatars/${u.avatar}`)
                       : dicebear(u.displayName || u.email)}
                     alt={u.displayName}
                     className="follow-modal-user__avatar"

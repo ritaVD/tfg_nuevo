@@ -3,3 +3,5 @@ framework:
         default_options:
             verify_peer: false
             verify_host: false
+            timeout: 10
+            max_duration: 15

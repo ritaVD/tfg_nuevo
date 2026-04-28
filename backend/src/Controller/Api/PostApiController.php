@@ -73,6 +73,11 @@ class PostApiController extends AbstractController
 
         $filename  = uniqid('post_', true) . '.' . $ext;
         $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/posts';
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
         $file->move($uploadDir, $filename);
 
         $description = trim((string) ($request->request->get('description', ''))) ?: null;

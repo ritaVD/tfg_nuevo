@@ -842,10 +842,28 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   color: var(--color-text-muted);
 }
 
+@media (max-width: 768px) {
+  .page-header {
+    padding: 1.75rem 1.25rem 0.875rem;
+  }
+}
+
 @media (max-width: 640px) {
+  .page-header {
+    padding: 1.5rem 1rem 0.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .page-header__title {
+    font-size: 1.5rem;
+  }
+
   .page-banner {
     padding: 2rem 1rem 1.75rem;
   }
+
   .page-banner__title {
     font-size: 1.75rem;
   }
@@ -1139,5 +1157,127 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     right: 1rem;
     left: 1rem;
     max-width: none;
+  }
+}
+
+/* ============================================================
+   CONFIRM DIALOG
+   ============================================================ */
+
+@keyframes cdialog-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cdialog-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.cdialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.60);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: cdialog-backdrop-in 160ms ease forwards;
+}
+
+.cdialog {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), var(--inset-highlight);
+  padding: 1.75rem;
+  animation: cdialog-in 220ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.cdialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.cdialog__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.3;
+}
+
+.cdialog__close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  color: var(--color-text-light);
+  transition: background var(--transition), color var(--transition);
+}
+.cdialog__close:hover {
+  background: var(--color-surface-tinted);
+  color: var(--color-text);
+}
+
+.cdialog__message {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.cdialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.cdialog__spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* btn-danger variant */
+.btn-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border-color: var(--color-danger-border);
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(147, 0, 10, 0.30);
+  border-color: rgba(255, 180, 171, 0.50);
+  color: var(--color-rose-light);
+  box-shadow: var(--shadow-rose);
+}
+
+@media (max-width: 480px) {
+  .cdialog {
+    padding: 1.25rem;
+    border-radius: var(--radius-lg);
+  }
+  .cdialog__actions {
+    flex-direction: column-reverse;
+  }
+  .cdialog__actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { clubsApi, type Club } from '../api/clubs'
 import { useAuth } from '../context/AuthContext'
 import Spinner from '../components/Spinner'
+import ConfirmDialog from '../components/ConfirmDialog'
 import {
   Users, Plus, X, Globe, Lock, Shield,
   UserCheck, UserMinus, BookOpen, ArrowRight, Search, Sparkles, Clock,
@@ -183,6 +184,7 @@ function ClubCard({ club, onRefresh }: { club: Club; onRefresh: () => void }) {
   const { user } = useAuth()
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState('')
+  const [confirmLeave, setConfirmLeave] = useState(false)
 
   async function handleJoin() {
     setActionLoading(true)
@@ -197,12 +199,12 @@ function ClubCard({ club, onRefresh }: { club: Club; onRefresh: () => void }) {
     }
   }
 
-  async function handleLeave() {
-    if (!confirm('¿Abandonar este club?')) return
+  async function doLeave() {
     setActionLoading(true)
     setActionError('')
     try {
       await clubsApi.leave(club.id)
+      setConfirmLeave(false)
       onRefresh()
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Error')
@@ -277,13 +279,24 @@ function ClubCard({ club, onRefresh }: { club: Club; onRefresh: () => void }) {
         {user && club.userRole === 'member' && (
           <button
             className="btn btn-ghost btn-sm"
-            onClick={handleLeave}
+            onClick={() => setConfirmLeave(true)}
             disabled={actionLoading}
           >
-            {actionLoading ? <Spinner size={14} /> : <><UserMinus size={14} /> Abandonar</>}
+            <UserMinus size={14} /> Abandonar
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmLeave}
+        title="¿Abandonar el club?"
+        message={<>Dejarás de ser miembro de <strong>{club.name}</strong>. Podrás volver a unirte si el club es público.</>}
+        confirmLabel="Sí, abandonar"
+        variant="danger"
+        loading={actionLoading}
+        onConfirm={doLeave}
+        onCancel={() => setConfirmLeave(false)}
+      />
     </div>
   )
 }

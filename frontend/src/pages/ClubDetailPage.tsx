@@ -5,6 +5,7 @@ import { chatsApi, type Chat, type ChatMessage } from '../api/chats'
 import { booksApi, type Book } from '../api/books'
 import { useAuth } from '../context/AuthContext'
 import Spinner from '../components/Spinner'
+import ConfirmDialog from '../components/ConfirmDialog'
 import {
   Globe, Lock, MessageSquare, Users, ClipboardList,
   Settings, UserCheck, User, BookOpen, Calendar,
@@ -299,14 +300,18 @@ function ChatThread({
                 const isMe = msg.user.id === userId
                 const name = msg.user.displayName || msg.user.email
                 const avatar = msg.user.avatar
-                  ? (msg.user.avatar.startsWith('http') ? msg.user.avatar : `/uploads/${msg.user.avatar}`)
+                  ? (msg.user.avatar.startsWith('http') ? msg.user.avatar : `/uploads/avatars/${msg.user.avatar}`)
                   : dicebear(name)
                 const canDelete = isAdmin || msg.user.id === userId
                 return (
                   <div key={msg.id} className={`wapp-row${isMe ? ' wapp-row--me' : ''}`}>
                     {!isMe && <img src={avatar} alt={name} className="wapp-avatar" />}
                     <div className="wapp-content">
-                      {!isMe && <div className="wapp-name">{name}</div>}
+                      {!isMe && (
+                        <Link to={`/users/${msg.user.id}`} className="wapp-name wapp-name--link">
+                          {name}
+                        </Link>
+                      )}
                       <div className={`wapp-bubble${isMe ? ' wapp-bubble--me' : ' wapp-bubble--other'}`}>
                         {msg.content}
                       </div>
@@ -488,6 +493,8 @@ export default function ClubDetailPage() {
   const [requestsLoaded, setRequestsLoaded] = useState(false)
 
   const [actionLoading, setActionLoading] = useState(false)
+  const [confirmLeave, setConfirmLeave] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   async function loadClub() {
     setLoading(true); setError('')
@@ -539,15 +546,13 @@ export default function ClubDetailPage() {
     finally { setActionLoading(false) }
   }
 
-  async function handleLeave() {
-    if (!confirm('¿Abandonar este club?')) return
+  async function doLeave() {
     setActionLoading(true)
     try { await clubsApi.leave(clubId); navigate('/clubs') }
     catch { setActionLoading(false) }
   }
 
-  async function handleDelete() {
-    if (!confirm(`¿Eliminar el club "${club?.name}"? Esta acción no se puede deshacer.`)) return
+  async function doDelete() {
     try { await clubsApi.delete(clubId); navigate('/clubs') }
     catch { /* ignore */ }
   }
@@ -647,16 +652,16 @@ export default function ClubDetailPage() {
                 </span>
               )}
               {isMember && !isAdmin && (
-                <button className="btn ch-btn-ghost" onClick={handleLeave} disabled={actionLoading}>
+                <button className="btn ch-btn-ghost" onClick={() => setConfirmLeave(true)} disabled={actionLoading}>
                   Abandonar club
                 </button>
               )}
               {isAdmin && (
                 <>
-                  <button className="btn ch-btn-ghost" onClick={handleLeave} disabled={actionLoading}>
+                  <button className="btn ch-btn-ghost" onClick={() => setConfirmLeave(true)} disabled={actionLoading}>
                     Abandonar
                   </button>
-                  <button className="btn ch-btn-danger" onClick={handleDelete}>
+                  <button className="btn ch-btn-danger" onClick={() => setConfirmDelete(true)}>
                     Eliminar club
                   </button>
                 </>
@@ -780,7 +785,7 @@ export default function ClubDetailPage() {
                   {members.map(member => {
                     const name = member.user.displayName || member.user.email
                     const avatar = member.user.avatar
-                      ? (member.user.avatar.startsWith('http') ? member.user.avatar : `/uploads/${member.user.avatar}`)
+                      ? (member.user.avatar.startsWith('http') ? member.user.avatar : `/uploads/avatars/${member.user.avatar}`)
                       : dicebear(name)
                     const canKick = isAdmin && member.user.id !== user?.id
                     return (
@@ -826,7 +831,9 @@ export default function ClubDetailPage() {
                   {requests.map(req => (
                     <div key={req.id} className="request-item">
                       <div className="request-item__info">
-                        <div className="request-item__name">{req.user.displayName || req.user.email}</div>
+                        <Link to={`/users/${req.user.id}`} className="request-item__name request-item__name--link">
+                          {req.user.displayName || req.user.email}
+                        </Link>
                         <div className="request-item__date">
                           {req.user.email} · {fmtDate(req.requestedAt)}
                         </div>
@@ -864,7 +871,9 @@ export default function ClubDetailPage() {
               {club.owner && (
                 <div className="sw-row">
                   <span className="sw-label">Creado por</span>
-                  <span style={{ fontSize: '0.82rem' }}>{club.owner.displayName || club.owner.email}</span>
+                  <Link to={`/users/${club.owner.id}`} style={{ fontSize: '0.82rem', color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 500 }}>
+                    {club.owner.displayName || club.owner.email}
+                  </Link>
                 </div>
               )}
             </div>
@@ -878,6 +887,26 @@ export default function ClubDetailPage() {
           />
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={confirmLeave}
+        title="¿Abandonar el club?"
+        message={<>Dejarás de ser miembro de <strong>{club.name}</strong>. Podrás volver a unirte si el club es público.</>}
+        confirmLabel="Sí, abandonar"
+        variant="danger"
+        loading={actionLoading}
+        onConfirm={doLeave}
+        onCancel={() => setConfirmLeave(false)}
+      />
+      <ConfirmDialog
+        open={confirmDelete}
+        title="¿Eliminar el club?"
+        message={<>Esta acción es permanente. El club <strong>{club.name}</strong>, sus debates y todos sus datos se eliminarán para siempre.</>}
+        confirmLabel="Sí, eliminar"
+        variant="danger"
+        onConfirm={doDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </>
   )
 }

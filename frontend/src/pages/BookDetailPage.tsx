@@ -193,7 +193,7 @@ function ReviewForm({
 
 function ReviewCard({ review }: { review: Review }) {
   const avatarSrc = review.user.avatar
-    ? (review.user.avatar.startsWith('http') ? review.user.avatar : `/uploads/${review.user.avatar}`)
+    ? (review.user.avatar.startsWith('http') ? review.user.avatar : `/uploads/avatars/${review.user.avatar}`)
     : dicebear(review.user.displayName)
 
   return (

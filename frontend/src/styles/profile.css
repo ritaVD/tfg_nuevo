@@ -472,7 +472,11 @@
   font-weight: 700;
   color: var(--color-primary);
   margin-right: 0.3rem;
+  text-decoration: none;
 }
+a.post-comment__name--link:hover { color: var(--color-primary-hover); text-decoration: underline; }
+
+.post-comment__avatar-link { flex-shrink: 0; }
 
 .post-comment__text {
   color: var(--color-text);
@@ -985,6 +989,11 @@
 }
 
 @media (max-width: 480px) {
+  .profile-layout {
+    padding: 1rem;
+    gap: 1.25rem;
+  }
+
   .user-search-card {
     flex-wrap: wrap;
   }

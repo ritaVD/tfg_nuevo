@@ -102,16 +102,34 @@ class UserApiController extends AbstractController
             return $this->json(['error' => 'No se envió ningún archivo'], 400);
         }
 
-        $filename = uniqid() . '.' . $file->guessExtension();
-        $file->move(
-            $this->getParameter('kernel.project_dir') . '/public/uploads/avatars',
-            $filename
-        );
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $ext     = strtolower($file->guessExtension() ?? '');
+        if (!in_array($ext, $allowed, true)) {
+            return $this->json(['error' => 'Formato de imagen no permitido'], 400);
+        }
+
+        $filename  = uniqid('avatar_', true) . '.' . $ext;
+        $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/avatars';
+
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $file->move($uploadDir, $filename);
+
+        // Borrar avatar anterior si existe
+        $old = $user->getAvatar();
+        if ($old) {
+            $oldPath = $this->getParameter('kernel.project_dir') . '/public/uploads/avatars/' . $old;
+            if (file_exists($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
 
         $user->setAvatar($filename);
         $this->em->flush();
 
-        return $this->json(['avatar' => $filename]);
+        return $this->json($this->serializeOwnProfile($user));
     }
 
     // -------------------------------------------------------

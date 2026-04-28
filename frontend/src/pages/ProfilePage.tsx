@@ -219,7 +219,7 @@ export default function ProfilePage() {
   if (loading) return <div className="loading-state loading-state--page"><Spinner size={36} /></div>
 
   const avatarSrc = profile?.avatar
-    ? (profile.avatar.startsWith('http') ? profile.avatar : `/uploads/${profile.avatar}`)
+    ? (profile.avatar.startsWith('http') ? profile.avatar : `/uploads/avatars/${profile.avatar}`)
     : dicebear(profile?.displayName || profile?.email || 'user')
 
   return (
@@ -442,7 +442,7 @@ export default function ProfilePage() {
                     style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none', flex: 1, minWidth: 0, color: 'inherit' }}
                   >
                     <img
-                      src={u.avatar ? (u.avatar.startsWith('http') ? u.avatar : `/uploads/${u.avatar}`) : dicebear(u.displayName || u.email)}
+                      src={u.avatar ? (u.avatar.startsWith('http') ? u.avatar : `/uploads/avatars/${u.avatar}`) : dicebear(u.displayName || u.email)}
                       alt={u.displayName}
                       className="follow-modal-user__avatar"
                     />

@@ -54,7 +54,7 @@ function timeAgo(iso: string): string {
 
 // ── Notification item ─────────────────────────────────────────────────────────
 
-function NotifRow({ n }: { n: NotifItem }) {
+function NotifRow({ n, onClose }: { n: NotifItem; onClose: () => void }) {
   const [acting, setActing] = useState(false)
   const [actionResult, setActionResult] = useState<{ action: 'accepted' | 'declined'; name: string } | null>(null)
 
@@ -101,6 +101,16 @@ function NotifRow({ n }: { n: NotifItem }) {
   }
 
   const { type, actor, club, refId, createdAt, isRead } = n
+
+  const A = (
+    <Link to={`/users/${actor.id}`} className="notif-actor-link" onClick={onClose}>
+      {actor.displayName}
+    </Link>
+  )
+  const C = club
+    ? <Link to={`/clubs/${club.id}`} className="notif-actor-link" onClick={onClose}>{club.name}</Link>
+    : null
+
   let icon: React.ReactNode
   let text: React.ReactNode
   let actions: React.ReactNode = null
@@ -108,11 +118,11 @@ function NotifRow({ n }: { n: NotifItem }) {
   switch (type) {
     case 'follow':
       icon = <UserCheck size={14} style={{ color: 'var(--color-success)' }} />
-      text = <><strong>{actor.displayName}</strong> ha empezado a seguirte</>
+      text = <>{A} ha empezado a seguirte</>
       break
     case 'follow_request':
       icon = <User size={14} style={{ color: 'var(--color-primary)' }} />
-      text = <><strong>{actor.displayName}</strong> quiere seguirte</>
+      text = <>{A} quiere seguirte</>
       if (refId) {
         actions = (
           <div className="notif-bell__item-actions">
@@ -128,11 +138,11 @@ function NotifRow({ n }: { n: NotifItem }) {
       break
     case 'follow_accepted':
       icon = <UserCheck size={14} style={{ color: 'var(--color-success)' }} />
-      text = <><strong>{actor.displayName}</strong> aceptó tu solicitud de seguimiento</>
+      text = <>{A} aceptó tu solicitud de seguimiento</>
       break
     case 'club_request':
       icon = <ShieldCheck size={14} style={{ color: 'var(--color-primary)' }} />
-      text = <><strong>{actor.displayName}</strong> quiere unirse a <strong>{club?.name}</strong></>
+      text = <>{A} quiere unirse a {C ?? <strong>{club?.name}</strong>}</>
       if (club && refId) {
         actions = (
           <div className="notif-bell__item-actions">
@@ -148,23 +158,23 @@ function NotifRow({ n }: { n: NotifItem }) {
       break
     case 'club_approved':
       icon = <ShieldCheck size={14} style={{ color: 'var(--color-success)' }} />
-      text = <>Te aceptaron en <strong>{club?.name}</strong></>
+      text = <>Te aceptaron en {C ?? <strong>{club?.name}</strong>}</>
       break
     case 'club_rejected':
       icon = <ShieldX size={14} style={{ color: 'var(--color-danger)' }} />
-      text = <>Tu solicitud a <strong>{club?.name}</strong> fue rechazada</>
+      text = <>Tu solicitud a {C ?? <strong>{club?.name}</strong>} fue rechazada</>
       break
     case 'like':
       icon = <Bell size={14} style={{ color: 'var(--color-rose-light)' }} />
-      text = <><strong>{actor.displayName}</strong> dio me gusta a tu publicación</>
+      text = <>{A} dio me gusta a tu publicación</>
       break
     case 'comment':
       icon = <Bell size={14} style={{ color: 'var(--color-accent)' }} />
-      text = <><strong>{actor.displayName}</strong> comentó en tu publicación</>
+      text = <>{A} comentó en tu publicación</>
       break
     default:
       icon = <Bell size={14} />
-      text = <>{actor.displayName}</>
+      text = <>{A}</>
   }
 
   return (
@@ -285,7 +295,7 @@ export default function Navbar() {
   }
 
   const avatarSrc = user?.avatar
-    ? (user.avatar.startsWith('http') ? user.avatar : `/uploads/${user.avatar}`)
+    ? (user.avatar.startsWith('http') ? user.avatar : `/uploads/avatars/${user.avatar}`)
     : dicebear(user?.displayName || user?.email || 'U')
 
   const navLinks = NAV_LINKS(user)
@@ -365,13 +375,13 @@ export default function Navbar() {
                             ? <div className="notif-bell__empty">Cargando…</div>
                             : historyItems.length === 0
                               ? <div className="notif-bell__empty">Sin notificaciones</div>
-                              : historyItems.map(n => <NotifRow key={n.id} n={n} />)
+                              : historyItems.map(n => <NotifRow key={n.id} n={n} onClose={() => { setNotifOpen(false); setShowHistory(false) }} />)
                         ) : (
                           loading
                             ? <div className="notif-bell__empty">Cargando…</div>
                             : data.items.length === 0
                               ? <div className="notif-bell__empty">Sin notificaciones recientes</div>
-                              : data.items.map(n => <NotifRow key={n.id} n={n} />)
+                              : data.items.map(n => <NotifRow key={n.id} n={n} onClose={() => setNotifOpen(false)} />)
                         )}
                       </div>
 
@@ -412,7 +422,6 @@ export default function Navbar() {
                         <img src={avatarSrc} alt="" className="navbar__user-dropdown-avatar" />
                         <div>
                           <div className="navbar__user-dropdown-name">{user.displayName || 'Usuario'}</div>
-                          <div className="navbar__user-dropdown-email">{user.email}</div>
                         </div>
                       </div>
                       <div className="navbar__user-dropdown-body">
@@ -478,7 +487,6 @@ export default function Navbar() {
               <img src={avatarSrc} alt="" className="navbar__mobile-user-avatar" />
               <div>
                 <div className="navbar__mobile-user-name">{user.displayName || 'Usuario'}</div>
-                <div className="navbar__mobile-user-email">{user.email}</div>
               </div>
             </div>
           )}

@@ -101,9 +101,11 @@ class ClubApiController extends AbstractController
         $em->flush();
 
         return $this->json([
-            'id'         => $club->getId(),
-            'name'       => $club->getName(),
-            'visibility' => $club->getVisibility(),
+            'id'               => $club->getId(),
+            'name'             => $club->getName(),
+            'visibility'       => $club->getVisibility(),
+            'userRole'         => 'admin',
+            'hasPendingRequest'=> false,
         ], 201);
     }
 

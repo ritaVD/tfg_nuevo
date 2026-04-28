@@ -104,7 +104,7 @@ export default function PostCard({
           <Link to={`/users/${post.user.id}`} className="post-card__author">
             <img
               src={post.user.avatar
-                ? (post.user.avatar.startsWith('http') ? post.user.avatar : `/uploads/${post.user.avatar}`)
+                ? (post.user.avatar.startsWith('http') ? post.user.avatar : `/uploads/avatars/${post.user.avatar}`)
                 : dicebear(post.user.displayName)}
               alt={post.user.displayName}
               className="post-card__author-avatar"
@@ -142,15 +142,19 @@ export default function PostCard({
               <>
                 {comments.map(c => (
                   <div key={c.id} className="post-comment">
-                    <img
-                      src={c.user.avatar
-                        ? (c.user.avatar.startsWith('http') ? c.user.avatar : `/uploads/${c.user.avatar}`)
-                        : dicebear(c.user.displayName)}
-                      alt={c.user.displayName}
-                      className="post-comment__avatar"
-                    />
+                    <Link to={`/users/${c.user.id}`} className="post-comment__avatar-link">
+                      <img
+                        src={c.user.avatar
+                          ? (c.user.avatar.startsWith('http') ? c.user.avatar : `/uploads/avatars/${c.user.avatar}`)
+                          : dicebear(c.user.displayName)}
+                        alt={c.user.displayName}
+                        className="post-comment__avatar"
+                      />
+                    </Link>
                     <div className="post-comment__content">
-                      <span className="post-comment__name">{c.user.displayName}</span>
+                      <Link to={`/users/${c.user.id}`} className="post-comment__name post-comment__name--link">
+                        {c.user.displayName}
+                      </Link>
                       <span className="post-comment__text">{c.content}</span>
                     </div>
                     {meId && (c.user.id === meId || post.user.id === meId) && (
