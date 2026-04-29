@@ -23,7 +23,7 @@ WORKDIR /var/www/html
 
 COPY composer.json composer.lock symfony.lock ./
 
-RUN composer install \
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
         --no-dev \
         --no-scripts \
         --no-interaction \
@@ -31,11 +31,9 @@ RUN composer install \
 
 COPY . .
 
-RUN APP_ENV=prod composer install \
-        --no-dev \
-        --no-interaction \
-        --optimize-autoloader \
-        --prefer-dist
+RUN COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod composer dump-autoload \
+        --optimize \
+        --no-dev
 
 RUN echo "APP_ENV=prod" > .env.local
 
