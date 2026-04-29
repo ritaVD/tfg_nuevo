@@ -55,6 +55,7 @@ class AdminApiController extends AbstractController
             'roles'       => $u->getRoles(),
             'isVerified'  => $u->isVerified(),
             'isAdmin'     => in_array('ROLE_ADMIN', $u->getRoles(), true),
+            'isBanned'    => $u->isBanned(),
         ], $users));
     }
 
@@ -92,6 +93,36 @@ class AdminApiController extends AbstractController
             'id'      => $user->getId(),
             'isAdmin' => in_array('ROLE_ADMIN', $user->getRoles(), true),
             'roles'   => $user->getRoles(),
+        ]);
+    }
+
+    // -------------------------------------------------------
+    // PATCH /api/admin/users/{id}/ban  →  banear/desbanear usuario
+    // Body JSON: { "isBanned": true|false }
+    // -------------------------------------------------------
+    #[Route('/users/{id}/ban', name: 'users_ban', requirements: ['id' => '\d+'], methods: ['PATCH'])]
+    public function setBan(int $id, Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $user = $this->userRepo->find($id);
+        if (!$user) {
+            return $this->json(['error' => 'Usuario no encontrado'], 404);
+        }
+
+        /** @var \App\Entity\User $me */
+        $me = $this->getUser();
+        if ($user->getId() === $me->getId()) {
+            return $this->json(['error' => 'No puedes banearte a ti mismo'], 400);
+        }
+
+        $data = json_decode($request->getContent(), true) ?? [];
+        $user->setIsBanned((bool) ($data['isBanned'] ?? false));
+        $this->em->flush();
+
+        return $this->json([
+            'id'       => $user->getId(),
+            'isBanned' => $user->isBanned(),
         ]);
     }
 

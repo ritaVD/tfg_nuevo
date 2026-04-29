@@ -100,6 +100,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private bool $isPrivate = false;
 
+    #[ORM\Column]
+    private bool $isBanned = false;
+
     public function __construct()
     {
         $this->shelves = new ArrayCollection();
@@ -482,6 +485,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsPrivate(bool $isPrivate): static
     {
         $this->isPrivate = $isPrivate;
+
+        return $this;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->isBanned;
+    }
+
+    public function setIsBanned(bool $isBanned): static
+    {
+        $this->isBanned = $isBanned;
 
         return $this;
     }

@@ -64,6 +64,14 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
     } catch { /* ignore */ }
   }
 
+  async function handleToggleBan(user: AdminUser) {
+    if (!confirm(`${user.isBanned ? 'Desbanear' : 'Banear'} a ${user.displayName || user.email}?`)) return
+    try {
+      await adminApi.setBan(user.id, !user.isBanned)
+      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isBanned: !u.isBanned } : u))
+    } catch { /* ignore */ }
+  }
+
   async function handleDelete(user: AdminUser) {
     if (!confirm(`¿Eliminar la cuenta de ${user.displayName || user.email}? Esta acción no se puede deshacer.`)) return
     try {
@@ -96,6 +104,7 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
               <th>Usuario</th>
               <th>Email</th>
               <th>Rol</th>
+              <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -111,6 +120,11 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
                     : <span className="badge badge-neutral">Usuario</span>}
                 </td>
                 <td>
+                  {user.isBanned
+                    ? <span className="badge badge-danger">Baneado</span>
+                    : <span className="badge badge-success">Activo</span>}
+                </td>
+                <td>
                   {user.id !== currentUserId ? (
                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <button
@@ -118,6 +132,12 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
                         onClick={() => handleToggleAdmin(user)}
                       >
                         {user.isAdmin ? 'Quitar admin' : 'Hacer admin'}
+                      </button>
+                      <button
+                        className={`btn btn-sm ${user.isBanned ? 'btn-secondary' : 'btn-warning'}`}
+                        onClick={() => handleToggleBan(user)}
+                      >
+                        {user.isBanned ? 'Desbanear' : 'Banear'}
                       </button>
                       <button className="btn btn-danger btn-sm btn-icon" onClick={() => handleDelete(user)} title="Eliminar usuario">
                         <Trash2 size={13} />

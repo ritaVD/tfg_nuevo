@@ -201,10 +201,11 @@ class PostApiController extends AbstractController
             return $this->json(['error' => 'Comentario no encontrado'], 404);
         }
 
-        $isOwner   = $comment->getUser()->getId() === $me->getId();
-        $isPostOwner = $post->getUser()->getId() === $me->getId();
+        $isOwner      = $comment->getUser()->getId() === $me->getId();
+        $isPostOwner  = $post->getUser()->getId() === $me->getId();
+        $isGlobalAdmin = $this->isGranted('ROLE_ADMIN');
 
-        if (!$isOwner && !$isPostOwner) {
+        if (!$isOwner && !$isPostOwner && !$isGlobalAdmin) {
             return $this->json(['error' => 'Sin permisos para eliminar este comentario'], 403);
         }
 

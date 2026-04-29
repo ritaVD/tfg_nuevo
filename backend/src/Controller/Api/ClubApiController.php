@@ -646,6 +646,10 @@ class ClubApiController extends AbstractController
     // -------------------------------------------------------
     private function isAdmin(Club $club, ClubMemberRepository $clubMemberRepository): bool
     {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return true;
+        }
+
         $membership = $clubMemberRepository->findOneBy([
             'club' => $club,
             'user' => $this->getUser(),

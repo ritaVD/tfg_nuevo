@@ -14,6 +14,7 @@ export interface AdminUser {
   roles: string[]
   isVerified: boolean
   isAdmin: boolean
+  isBanned: boolean
 }
 
 export interface AdminClub {
@@ -39,6 +40,8 @@ export const adminApi = {
   users: () => apiFetch<AdminUser[]>('/admin/users'),
   setRole: (id: number, isAdmin: boolean) =>
     apiFetch<AdminUser>(`/admin/users/${id}/role`, 'PATCH', { isAdmin }),
+  setBan: (id: number, isBanned: boolean) =>
+    apiFetch<{ id: number; isBanned: boolean }>(`/admin/users/${id}/ban`, 'PATCH', { isBanned }),
   deleteUser: (id: number) =>
     apiFetch<void>(`/admin/users/${id}`, 'DELETE'),
   clubs: () => apiFetch<AdminClub[]>('/admin/clubs'),

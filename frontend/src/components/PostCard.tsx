@@ -17,11 +17,13 @@ export default function PostCard({
   meId,
   onDelete,
   hideAuthor = false,
+  isAdmin = false,
 }: {
   post: Post
   meId: number | null
   onDelete?: (id: number) => void
   hideAuthor?: boolean
+  isAdmin?: boolean
 }) {
   const [post, setPost] = useState(initial)
   const [showComments, setShowComments] = useState(false)
@@ -83,7 +85,7 @@ export default function PostCard({
     } catch { /* ignore */ }
   }
 
-  const canDelete = onDelete && meId === post.user.id
+  const canDelete = onDelete && (meId === post.user.id || isAdmin)
 
   return (
     <div className="post-card">
@@ -157,7 +159,7 @@ export default function PostCard({
                       </Link>
                       <span className="post-comment__text">{c.content}</span>
                     </div>
-                    {meId && (c.user.id === meId || post.user.id === meId) && (
+                    {meId && (c.user.id === meId || post.user.id === meId || isAdmin) && (
                       <button className="post-comment__delete" onClick={() => handleDeleteComment(c.id)} title="Eliminar">
                         <X size={11} />
                       </button>

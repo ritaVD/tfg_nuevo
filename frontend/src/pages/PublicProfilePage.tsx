@@ -205,7 +205,16 @@ export default function PublicProfilePage() {
             ) : (
               <div className="posts-grid">
                 {posts.map(post => (
-                  <PostCard key={post.id} post={post} meId={me?.id ?? null} />
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    meId={me?.id ?? null}
+                    isAdmin={me?.roles?.includes('ROLE_ADMIN')}
+                    onDelete={me?.roles?.includes('ROLE_ADMIN')
+                      ? (id) => setPosts((prev: Post[]) => prev.filter((p: Post) => p.id !== id))
+                      : undefined
+                    }
+                  />
                 ))}
               </div>
             )}

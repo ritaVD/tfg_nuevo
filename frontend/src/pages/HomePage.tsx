@@ -108,7 +108,8 @@ export default function HomePage() {
                   key={post.id}
                   post={post}
                   meId={user.id}
-                  onDelete={post.user.id === user.id
+                  isAdmin={user.roles?.includes('ROLE_ADMIN')}
+                  onDelete={(post.user.id === user.id || user.roles?.includes('ROLE_ADMIN'))
                     ? (id) => setFeed(prev => prev.filter(p => p.id !== id))
                     : undefined
                   }
