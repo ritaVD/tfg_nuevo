@@ -32,6 +32,8 @@ RUN APP_ENV=prod composer install \
 
 COPY . .
 
+RUN APP_ENV=prod composer dump-autoload --optimize --no-dev
+
 RUN echo "APP_ENV=prod" > .env.local
 
 RUN mkdir -p var/cache var/log \
