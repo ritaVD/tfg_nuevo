@@ -771,7 +771,14 @@ export default function ClubDetailPage() {
           )}
 
           {/* Members */}
-          {tab === 'members' && (
+          {tab === 'members' && club.visibility === 'private' && !isMember && (
+            <div className="empty-state">
+              <div className="empty-state__icon"><Lock size={40} /></div>
+              <p className="empty-state__title">Club privado</p>
+              <p className="empty-state__desc">Los miembros solo son visibles para los integrantes del club</p>
+            </div>
+          )}
+          {tab === 'members' && (club.visibility !== 'private' || isMember) && (
             <div>
               {membersLoading ? (
                 <div className="loading-state"><Spinner size={28} /></div>

@@ -25,7 +25,17 @@
       "Bash(git commit *)",
       "Bash(git push *)",
       "Bash(npx vite *)",
-      "Bash(grep -rn \"uploads/\\\\${\" C:/Users/Gigabyte/Documents/TFGdaw/frontend/src/)"
+      "Bash(grep -rn \"uploads/\\\\${\" C:/Users/Gigabyte/Documents/TFGdaw/frontend/src/)",
+      "Bash(xargs -I {} basename {})",
+      "Bash(grep -oP \"CREATE TABLE \\\\`?\\\\w+\")",
+      "Bash(grep -oP \"CREATE TABLE \\\\`?\\\\K\\\\w+\")",
+      "Bash(php -r ' *)",
+      "Bash(php -l backend/src/Controller/Api/FollowApiController.php)",
+      "Bash(php -l backend/src/Repository/NotificationRepository.php)",
+      "Bash(php -l backend/migrations/Version20260408000000.php)",
+      "Bash(php -l backend/src/Controller/Api/BookReviewApiController.php)",
+      "Bash(php -l backend/src/Entity/BookReview.php)",
+      "Bash(php -l backend/src/Repository/BookReviewRepository.php)"
     ]
   }
 }

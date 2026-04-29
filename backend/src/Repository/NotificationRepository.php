@@ -45,6 +45,19 @@ class NotificationRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /** Elimina notificaciones previas de follow del mismo actor (evita duplicados por follow/unfollow) */
+    public function deleteFollowNotifications(User $recipient, User $actor): void
+    {
+        $this->createQueryBuilder('n')
+            ->delete()
+            ->where('n.recipient = :recipient AND n.actor = :actor AND n.type IN (:types)')
+            ->setParameter('recipient', $recipient)
+            ->setParameter('actor', $actor)
+            ->setParameter('types', [Notification::TYPE_FOLLOW, Notification::TYPE_FOLLOW_REQUEST])
+            ->getQuery()
+            ->execute();
+    }
+
     /** Elimina notificaciones por tipo y refId (tras procesar solicitudes) */
     public function deleteByRefIdAndType(User $recipient, string $type, int $refId): void
     {

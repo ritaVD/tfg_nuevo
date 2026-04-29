@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Entity\Follow;
 use App\Entity\Notification;
 use App\Repository\FollowRepository;
+use App\Repository\NotificationRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,6 +18,7 @@ class FollowApiController extends AbstractController
         private EntityManagerInterface $em,
         private FollowRepository $followRepo,
         private UserRepository $userRepo,
+        private NotificationRepository $notifRepo,
     ) {}
 
     // ── POST /api/users/{id}/follow ──────────────────────────
@@ -44,7 +46,9 @@ class FollowApiController extends AbstractController
         $this->em->persist($follow);
         $this->em->flush();
 
-        // Notificación al destinatario
+        // Eliminar notificaciones de follow previas para evitar acumulación por follow/unfollow repetido
+        $this->notifRepo->deleteFollowNotifications($target, $me);
+
         if ($status === Follow::STATUS_ACCEPTED) {
             $this->em->persist(new Notification($target, $me, Notification::TYPE_FOLLOW));
         } else {
