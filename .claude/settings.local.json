@@ -35,7 +35,8 @@
       "Bash(php -l backend/migrations/Version20260408000000.php)",
       "Bash(php -l backend/src/Controller/Api/BookReviewApiController.php)",
       "Bash(php -l backend/src/Entity/BookReview.php)",
-      "Bash(php -l backend/src/Repository/BookReviewRepository.php)"
+      "Bash(php -l backend/src/Repository/BookReviewRepository.php)",
+      "Bash(git *)"
     ]
   }
 }
