@@ -209,6 +209,19 @@ Con `ON DELETE CASCADE` en todas las claves foráneas para limpiar notificacione
 
 ---
 
+### `Version20260429000000` — Campo de ban en usuario
+**Fecha:** 29 de abril de 2026
+
+Añade la columna `is_banned` a la tabla `user` para soportar la suspensión de cuentas por parte del administrador:
+
+```sql
+ALTER TABLE "user" ADD is_banned BOOLEAN NOT NULL DEFAULT FALSE
+```
+
+Un usuario con `is_banned = true` no puede iniciar sesión. El `UserChecker` de Symfony verifica este campo antes de crear la sesión (ver [05-seguridad.md](05-seguridad.md)).
+
+---
+
 ## Cómo crear una nueva migración
 
 Cuando se modifica o añade una entidad, Doctrine puede generar automáticamente la migración comparando el esquema actual de la BD con las entidades PHP:

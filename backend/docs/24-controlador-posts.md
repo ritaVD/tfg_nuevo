@@ -316,10 +316,11 @@ public function deleteComment(int $id, int $commentId): JsonResponse
         return $this->json(['error' => 'Comentario no encontrado'], 404);
     }
 
-    $isOwner     = $comment->getUser()->getId() === $me->getId();
-    $isPostOwner = $post->getUser()->getId() === $me->getId();
+    $isOwner       = $comment->getUser()->getId() === $me->getId();
+    $isPostOwner   = $post->getUser()->getId() === $me->getId();
+    $isGlobalAdmin = $this->isGranted('ROLE_ADMIN');
 
-    if (!$isOwner && !$isPostOwner) {
+    if (!$isOwner && !$isPostOwner && !$isGlobalAdmin) {
         return $this->json(['error' => 'Sin permisos para eliminar este comentario'], 403);
     }
 
@@ -333,6 +334,7 @@ public function deleteComment(int $id, int $commentId): JsonResponse
 **Quién puede eliminar un comentario:**
 - El **autor del comentario** (`$isOwner`).
 - El **autor del post** (`$isPostOwner`) — puede moderar los comentarios en su propia publicación.
+- Un usuario con **`ROLE_ADMIN`** (`$isGlobalAdmin`) — puede eliminar cualquier comentario en cualquier post.
 
 La validación triple `!$post || !$comment || $comment->getPost()->getId() !== $post->getId()` garantiza tres cosas:
 1. El post existe.
@@ -391,4 +393,4 @@ Para un feed de 40 posts, esto supone hasta 120 consultas adicionales. Es una de
 | `POST` | `/api/posts/{id}/like` | Requerida | Toggle like/unlike |
 | `GET` | `/api/posts/{id}/comments` | Pública | Listar comentarios |
 | `POST` | `/api/posts/{id}/comments` | Requerida | Añadir comentario |
-| `DELETE` | `/api/posts/{id}/comments/{cId}` | Requerida | Borrar (autor o dueño del post) |
+| `DELETE` | `/api/posts/{id}/comments/{cId}` | Requerida | Borrar (autor, dueño del post o admin global) |

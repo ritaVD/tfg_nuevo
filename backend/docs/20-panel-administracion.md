@@ -73,6 +73,7 @@ return $this->json(array_map(fn(User $u) => [
     'roles'       => $u->getRoles(),
     'isVerified'  => $u->isVerified(),
     'isAdmin'     => in_array('ROLE_ADMIN', $u->getRoles(), true),
+    'isBanned'    => $u->isBanned(),
 ], $users));
 ```
 
@@ -88,7 +89,8 @@ El campo `isAdmin` es un campo calculado (no existe en BD) que facilita al front
     "avatar": null,
     "roles": ["ROLE_ADMIN", "ROLE_USER"],
     "isVerified": true,
-    "isAdmin": true
+    "isAdmin": true,
+    "isBanned": false
   },
   {
     "id": 2,
@@ -97,7 +99,8 @@ El campo `isAdmin` es un campo calculado (no existe en BD) que facilita al front
     "avatar": "avatar_2.jpg",
     "roles": ["ROLE_USER"],
     "isVerified": false,
-    "isAdmin": false
+    "isAdmin": false,
+    "isBanned": false
   }
 ]
 ```
@@ -155,6 +158,29 @@ Pasos:
   "roles": ["ROLE_ADMIN", "ROLE_USER"]
 }
 ```
+
+---
+
+### `PATCH /api/admin/users/{id}/ban`
+
+Suspende o reactiva una cuenta de usuario. Body JSON:
+```json
+{ "isBanned": true }
+```
+
+**Regla de negocio:** no se puede banear al propio admin autenticado.
+
+Un usuario baneado no puede iniciar sesión — el `UserChecker` rechaza la autenticación con el mensaje *"Tu cuenta ha sido suspendida por un administrador."* Su sesión activa queda invalidada en la siguiente petición autenticada.
+
+**Respuesta:**
+```json
+{
+  "id": 5,
+  "isBanned": true
+}
+```
+
+En el frontend (`/admin` → pestaña Usuarios), cada fila tiene un botón "Banear" / "Desbanear" en color naranja y una columna "Estado" que muestra la insignia "Baneado" o "Activo".
 
 ---
 
@@ -330,11 +356,14 @@ El proceso es el mismo que la eliminación de un post por su autor (ver [14-modu
 |--------|---------------|---------------|
 | Ver todos los usuarios | No | `GET /api/admin/users` |
 | Cambiar roles | No | `PATCH /api/admin/users/{id}/role` |
+| Banear / desbanear usuarios | No | `PATCH /api/admin/users/{id}/ban` |
 | Eliminar cualquier usuario | No | `DELETE /api/admin/users/{id}` |
 | Eliminar su propio usuario | Sí (`DELETE /api/profile`) | Solo desde el perfil, no desde el panel |
 | Ver todos los clubes | Solo los públicos | `GET /api/admin/clubs` (todos) |
 | Eliminar cualquier club | Solo los suyos | `DELETE /api/admin/clubs/{id}` |
-| Eliminar cualquier post | Solo los suyos | `DELETE /api/admin/posts/{id}` |
+| Actuar como admin en cualquier club | Solo en sus clubs | Sí — `isAdmin()` incluye `ROLE_ADMIN` |
+| Eliminar cualquier post | Solo los suyos | Desde el panel y desde la UI |
+| Eliminar cualquier comentario | Solo propios o en posts propios | Sí (`deleteComment` incluye `ROLE_ADMIN`) |
 | Ver estadísticas globales | No | `GET /api/admin/stats` |
 
 ---
@@ -362,9 +391,18 @@ El acceso admin se verifica **dentro del método** con `denyAccessUnlessGranted`
 
 ### 7.3 Protecciones de integridad
 
-Dos operaciones tienen protección adicional para evitar estados irreparables:
+Tres operaciones tienen protección adicional para evitar estados irreparables:
 
 1. **No puedes degradarte a ti mismo:** `PATCH /api/admin/users/{id}/role` devuelve `400` si `id` coincide con el usuario autenticado.
-2. **No puedes eliminarte desde el panel:** `DELETE /api/admin/users/{id}` devuelve `400` si `id` coincide con el usuario autenticado.
+2. **No puedes banearte a ti mismo:** `PATCH /api/admin/users/{id}/ban` devuelve `400` si `id` coincide con el usuario autenticado.
+3. **No puedes eliminarte desde el panel:** `DELETE /api/admin/users/{id}` devuelve `400` si `id` coincide con el usuario autenticado.
 
-Ambas verificaciones comparan `$user->getId() === $me->getId()` con igualdad estricta sobre enteros.
+Las tres verificaciones comparan `$user->getId() === $me->getId()` con igualdad estricta sobre enteros.
+
+### 7.4 Permisos heredados en controladores normales
+
+El `ROLE_ADMIN` no solo actúa en el panel — también extiende los permisos en los controladores regulares:
+
+- **`ClubApiController`:** el helper `isAdmin(Club, repo)` devuelve `true` si el usuario tiene `ROLE_ADMIN`, sin importar si es miembro del club. Esto permite expulsar miembros, aprobar/rechazar solicitudes, establecer el libro del mes y eliminar hilos en cualquier club.
+- **`PostApiController`:** `deleteComment` permite al admin eliminar cualquier comentario, no solo los propios o los de sus posts.
+- **Frontend:** `PostCard` acepta la prop `isAdmin` para mostrar el botón de eliminar en posts y comentarios de otros usuarios cuando el admin navega la aplicación normalmente.

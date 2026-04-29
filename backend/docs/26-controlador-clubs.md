@@ -398,7 +398,9 @@ $members = array_map(fn(ClubMember $m) => [
 ], $clubMemberRepository->findMembersWithUser($club));
 ```
 
-**Clubs privados** solo muestran los miembros a otros miembros. Un visitante externo (autenticado o no) recibe 403.
+**Clubs privados** solo muestran los miembros a otros miembros o a un administrador global (`ROLE_ADMIN`). Un visitante externo (autenticado o no) recibe 403.
+
+**En el frontend**, cuando el club es privado y el usuario no es miembro, la pestaña "Miembros" muestra un estado vacío con el mensaje *"Club privado — Los miembros solo son visibles para los integrantes del club"*, en lugar de mostrar una lista vacía que podría confundir al usuario con un club sin miembros.
 
 `findMembersWithUser($club)` hace un JOIN con la tabla `user` para traer el objeto `User` junto al `ClubMember` en una sola consulta (eager loading), evitando N consultas al acceder a `$m->getUser()`.
 
@@ -565,6 +567,10 @@ Las fechas se formatean como `'Y-m-d'` (solo la parte de fecha, sin hora), porqu
 ```php
 private function isAdmin(Club $club, ClubMemberRepository $clubMemberRepository): bool
 {
+    if ($this->isGranted('ROLE_ADMIN')) {
+        return true;
+    }
+
     $membership = $clubMemberRepository->findOneBy([
         'club' => $club,
         'user' => $this->getUser(),
@@ -574,6 +580,8 @@ private function isAdmin(Club $club, ClubMemberRepository $clubMemberRepository)
 ```
 
 Se llama en 6 endpoints: `update`, `delete`, `kickMember`, `joinRequests`, `approveRequest`, `rejectRequest`. Centraliza la verificación y garantiza que la lógica de "¿es admin?" es consistente en todo el controlador.
+
+**`ROLE_ADMIN` tiene prioridad:** un administrador global puede expulsar miembros, aprobar/rechazar solicitudes y gestionar el libro del mes en cualquier club, aunque no sea miembro de él.
 
 El operador `?->` hace que si `$membership` es `null` (no es miembro), la comparación sea `null === 'admin'` → `false`. Sin el operador nullsafe, habría que escribir:
 ```php

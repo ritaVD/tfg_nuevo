@@ -49,6 +49,7 @@ Entidad central del sistema. Representa a cada persona registrada en la platafor
 | `isPrivate` | bool | Perfil privado: los seguidores deben ser aprobados (default: `false`) |
 | `shelvesPublic` | bool | Si sus estanterías son visibles para otros (default: `true`) |
 | `clubsPublic` | bool | Si sus clubes son visibles para otros (default: `true`) |
+| `isBanned` | bool | Si el usuario está suspendido y no puede iniciar sesión (default: `false`) |
 
 **Relaciones:**
 - → `Shelf` (1:N): estanterías propias

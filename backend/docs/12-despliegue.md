@@ -115,16 +115,24 @@ php bin/console doctrine:schema:validate
 php bin/console cache:clear
 ```
 
-### Crear un usuario administrador manualmente
+### Crear el usuario administrador inicial
 
-No hay comando dedicado. La forma más sencilla es promover a un usuario ya registrado desde la base de datos o usando el panel de admin de otro admin existente.
+El proyecto incluye el comando `app:create-admin` en `src/Command/CreateAdminCommand.php`. Crea el usuario `admin` con contraseña `admin` y rol `ROLE_ADMIN`, o le asigna el rol si ya existe:
 
-Alternativamente, con SQL:
-```sql
-UPDATE user
-SET roles = '["ROLE_ADMIN"]'
-WHERE email = 'admin@ejemplo.com';
+```bash
+php bin/console app:create-admin
 ```
+
+**Credenciales creadas:** email `admin` / contraseña `admin`.
+
+> En producción con Railway, este comando se ejecuta automáticamente en cada despliegue desde `docker/entrypoint.sh`, tras las migraciones. No es necesario ejecutarlo manualmente.
+
+Si se necesita promover a otro usuario existente desde SQL:
+```sql
+UPDATE "user" SET roles = '["ROLE_ADMIN"]' WHERE email = 'usuario@ejemplo.com';
+```
+
+Desde el panel admin (`/admin` → pestaña Usuarios) también se puede hacer admin a cualquier usuario registrado con el botón "Hacer admin".
 
 ---
 
@@ -206,9 +214,36 @@ docker compose -f compose.yaml -f compose.override.yaml up -d
 
 | Archivo | Propósito |
 |---------|-----------|
-| `Dockerfile` | Imagen PHP con extensiones necesarias (pdo, pdo_mysql, opcache, etc.) |
-| `compose.yaml` | Servicios para producción: PHP-FPM + Nginx + base de datos |
+| `Dockerfile` | Imagen PHP 8.2-FPM + Nginx + Supervisor (Railway-compatible) |
+| `docker/entrypoint.sh` | Script de arranque: migraciones → crear admin → warmup caché → supervisor |
+| `docker/nginx-railway.conf` | Configuración Nginx para Railway (puerto 8080, SPA fallback) |
+| `docker/supervisord.conf` | Supervisor: gestiona php-fpm y nginx como procesos paralelos |
+| `compose.yaml` | Servicios para producción local: PHP-FPM + Nginx + base de datos |
 | `compose.override.yaml` | Sobreescrituras para desarrollo: mapeo de puertos, volúmenes de código fuente |
+
+### Notas del `Dockerfile` (producción / Railway)
+
+El `Dockerfile` usa un patrón de dos fases para que `symfony/runtime` se genere correctamente:
+
+```dockerfile
+# Fase 1: instala paquetes sin scripts (capa cacheada)
+COPY composer.json composer.lock symfony.lock ./
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-scripts --no-interaction --prefer-dist
+
+# Fase 2: copia el código y regenera el autoloader con plugins activos
+COPY . .
+RUN COMPOSER_ALLOW_SUPERUSER=1 APP_ENV=prod composer dump-autoload --optimize --no-dev
+```
+
+`COMPOSER_ALLOW_SUPERUSER=1` es necesario porque el contenedor corre como `root`, y sin este flag Composer desactiva los plugins (incluyendo `symfony/runtime`), lo que impide generar `vendor/autoload_runtime.php`.
+
+El `entrypoint.sh` ejecuta en cada arranque:
+```sh
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || true
+php bin/console app:create-admin || true
+php bin/console cache:warmup --no-debug --env=prod
+exec /usr/bin/supervisord -c /etc/supervisord.conf
+```
 
 ---
 

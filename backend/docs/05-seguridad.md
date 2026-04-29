@@ -88,7 +88,36 @@ main:
 
 ---
 
-## 5. El proceso de login paso a paso
+## 5. `UserChecker` — verificación de estado de cuenta
+
+**Archivo:** `src/Security/UserChecker.php`
+
+Antes de que el login tenga éxito, Symfony llama a `UserChecker::checkPreAuth()`. Si el usuario está baneado, se lanza una excepción que devuelve un error de autenticación sin llegar a crear la sesión:
+
+```php
+public function checkPreAuth(UserInterface $user): void
+{
+    if (!$user instanceof User) return;
+
+    if ($user->isBanned()) {
+        throw new CustomUserMessageAccountStatusException(
+            'Tu cuenta ha sido suspendida por un administrador.'
+        );
+    }
+}
+```
+
+El `UserChecker` se registra en `security.yaml` bajo el firewall `main`:
+```yaml
+main:
+    user_checker: App\Security\UserChecker
+```
+
+Un usuario baneado recibe `401` al intentar hacer login con el mensaje de suspensión. Su sesión actual también queda invalidada la próxima vez que Symfony recargue el usuario de BD.
+
+---
+
+## 6. El proceso de login paso a paso
 
 Cuando el frontend envía `POST /api/login`:
 
@@ -97,15 +126,16 @@ Cuando el frontend envía `POST /api/login`:
 2. Symfony lee los campos `email` y `password` del JSON
 3. Llama al provider para buscar el usuario por email en BD
 4. Si no existe → llama a JsonLoginFailureHandler → 401
-5. Verifica la contraseña con UserPasswordHasher
-6. Si es incorrecta → llama a JsonLoginFailureHandler → 401
-7. Si es correcta → crea la sesión PHP con los datos del usuario
-8. Llama a JsonLoginSuccessHandler → 200 con datos del usuario
+5. UserChecker::checkPreAuth() — si isBanned=true → 401 con mensaje de suspensión
+6. Verifica la contraseña con UserPasswordHasher
+7. Si es incorrecta → llama a JsonLoginFailureHandler → 401
+8. Si es correcta → crea la sesión PHP con los datos del usuario
+9. Llama a JsonLoginSuccessHandler → 200 con datos del usuario
 ```
 
 ---
 
-## 6. `JsonLoginSuccessHandler`
+## 7. `JsonLoginSuccessHandler`
 
 **Archivo:** `src/Security/JsonLoginSuccessHandler.php`
 
@@ -125,7 +155,7 @@ El frontend React almacena esta respuesta en su estado/contexto para saber quié
 
 ---
 
-## 7. `JsonLoginFailureHandler`
+## 8. `JsonLoginFailureHandler`
 
 **Archivo:** `src/Security/JsonLoginFailureHandler.php`
 
@@ -139,7 +169,7 @@ Se ejecuta cuando las credenciales son incorrectas (email no encontrado o contra
 
 ---
 
-## 8. Roles y autorización
+## 9. Roles y autorización
 
 El sistema usa dos roles:
 
@@ -178,7 +208,7 @@ Se devuelve `404` en lugar de `403` para no revelar que el recurso existe.
 
 ---
 
-## 9. Serialización segura de contraseñas en sesión
+## 10. Serialización segura de contraseñas en sesión
 
 En `User.php`:
 
@@ -197,7 +227,7 @@ En lugar de guardar el hash bcrypt completo en los datos de sesión, se guarda u
 
 ---
 
-## 10. Verificación de email
+## 11. Verificación de email
 
 La clase `src/Security/EmailVerifier.php` utiliza el bundle `SymfonyCastsVerifyEmailBundle` para generar y validar tokens de verificación de email firmados. Se envía un enlace al email del usuario al registrarse.
 
@@ -205,7 +235,7 @@ La clase `src/Security/EmailVerifier.php` utiliza el bundle `SymfonyCastsVerifyE
 
 ---
 
-## 11. CORS y cookies en desarrollo
+## 12. CORS y cookies en desarrollo
 
 En desarrollo, el frontend React corre en `localhost:5173` y el backend en `localhost:8000`. Para que las cookies de sesión funcionen en peticiones cross-origin, el frontend debe configurar:
 
