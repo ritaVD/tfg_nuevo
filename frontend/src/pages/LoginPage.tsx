@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { BookOpen, Mail, Lock, LogIn } from 'lucide-react'
+import { BookOpen, Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react'
 import Spinner from '../components/Spinner'
 
 export default function LoginPage() {
@@ -12,6 +12,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -62,15 +63,25 @@ export default function LoginPage() {
               <label className="form-label">
                 <Lock size={14} /> Contraseña
               </label>
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                autoComplete="current-password"
-              />
+              <div className="input-password-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-control"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="input-password-toggle"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <button
               type="submit"

@@ -240,6 +240,29 @@
 select.form-control   { cursor: pointer; }
 textarea.form-control { resize: vertical; min-height: 80px; }
 
+.input-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-password-wrapper .form-control {
+  padding-right: 2.75rem;
+  width: 100%;
+}
+.input-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  line-height: 1;
+}
+.input-password-toggle:hover { color: var(--color-primary); }
+
 .form-check {
   display: flex;
   align-items: center;

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { authApi } from '../api/auth'
-import { BookOpen, Mail, Lock, UserPlus } from 'lucide-react'
+import { BookOpen, Mail, Lock, UserPlus, Eye, EyeOff } from 'lucide-react'
 import Spinner from '../components/Spinner'
 
 export default function RegisterPage() {
@@ -13,6 +13,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -82,29 +84,49 @@ export default function RegisterPage() {
               <label className="form-label">
                 <Lock size={14} /> Contraseña
               </label>
-              <input
-                type="password"
-                className="form-control"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                placeholder="Mínimo 6 caracteres"
-                autoComplete="new-password"
-              />
+              <div className="input-password-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-control"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  placeholder="Mínimo 6 caracteres"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="input-password-toggle"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <div className="form-group">
               <label className="form-label">
                 <Lock size={14} /> Confirmar contraseña
               </label>
-              <input
-                type="password"
-                className="form-control"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                required
-                placeholder="Repite tu contraseña"
-                autoComplete="new-password"
-              />
+              <div className="input-password-wrapper">
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  className="form-control"
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  required
+                  placeholder="Repite tu contraseña"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="input-password-toggle"
+                  onClick={() => setShowConfirm(v => !v)}
+                  aria-label={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <button
               type="submit"
