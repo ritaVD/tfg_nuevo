@@ -36,7 +36,11 @@
       "Bash(php -l backend/src/Controller/Api/BookReviewApiController.php)",
       "Bash(php -l backend/src/Entity/BookReview.php)",
       "Bash(php -l backend/src/Repository/BookReviewRepository.php)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(docker compose *)",
+      "Bash(netstat -ano)",
+      "PowerShell(Get-Service *)",
+      "PowerShell(Get-Process *)"
     ]
   }
 }

@@ -16,11 +16,11 @@ final class Version20260429000000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE "user" ADD is_banned BOOLEAN NOT NULL DEFAULT FALSE');
+        $this->addSql('ALTER TABLE `user` ADD is_banned TINYINT(1) NOT NULL DEFAULT 0');
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE "user" DROP COLUMN is_banned');
+        $this->addSql('ALTER TABLE `user` DROP COLUMN is_banned');
     }
 }

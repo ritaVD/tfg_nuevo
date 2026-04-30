@@ -19,7 +19,9 @@
 
 ## 1. Introducción y tecnologías
 
-El frontend de la plataforma es una **aplicación de página única (SPA)** construida con React 18 y TypeScript. Se comunica exclusivamente con el backend Symfony a través de la API REST bajo el prefijo `/api`, sin servidor de renderizado propio. El HTML resultante de la compilación con Vite se despliega como archivos estáticos servidos por Nginx.
+El frontend de la plataforma es una aplicación de página única (SPA) construida con React 18 y TypeScript. Se comunica con el backend Symfony a través de la API REST  `/api`. El HTML de Vite se despliega por Nginx.
+
+![ImagenHomePage](images/HomePage.png)
 
 ### Stack tecnológico
 
@@ -36,9 +38,9 @@ La decisión de no utilizar ningún framework CSS externo (Bootstrap, Tailwind, 
 
 ### Integración con el backend
 
-Durante el desarrollo, Vite actúa como proxy: las peticiones a `/api/*` y `/uploads/*` se redirigen automáticamente a `http://127.0.0.1:8000` (el servidor Symfony local). En producción, Nginx hace el mismo trabajo de enrutamiento, de modo que el frontend compilado nunca necesita conocer la dirección real del backend.
+Durante el desarrollo, Vite actúa como proxy: las peticiones a `/api/*` y `/uploads/*` se redirigen a `http://127.0.0.1:8000` (que es el servidor Symfony local). En producción, Nginx hace el mismo trabajo de para las rutas, de modo que el frontend compilado nunca necesita conocer la dirección real del backend.
 
-La autenticación se basa en **cookies de sesión**: todas las llamadas HTTP incluyen `credentials: 'include'` para enviar automáticamente la cookie `PHPSESSID` que Symfony gestiona. No se utilizan tokens JWT ni cabeceras de autorización.
+La autenticación se basa en cookies de sesión: todas las llamadas HTTP incluyen `credentials: 'include'` para enviar automáticamente la cookie `PHPSESSID` que Symfony gestiona. No se utilizan tokens JWT ni cabeceras de autorización.
 
 ---
 
@@ -123,7 +125,7 @@ frontend/
 
 ## 3. Sistema de diseño y estilos
 
-Todo el sistema visual está construido sobre **CSS Custom Properties** (variables CSS) sin ningún framework externo. `tokens.css` es el archivo central del que derivan todos los demás módulos CSS.
+Todo el sistema visual está construido sobre CSS Custom Properties(variables CSS) sin ningún framework externo. `tokens.css` es el archivo central del que derivan todos los demás módulos CSS.
 
 ### 3.1 Paleta de colores
 
