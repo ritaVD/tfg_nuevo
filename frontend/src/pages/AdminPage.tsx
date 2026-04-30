@@ -1,48 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { adminApi, type AdminUser, type AdminClub, type AdminPost, type AdminStats } from '../api/admin'
+import { adminApi, type AdminUser, type AdminClub, type AdminPost } from '../api/admin'
 import Spinner from '../components/Spinner'
-import { Users, BookOpen, ImageIcon, BarChart3, ShieldAlert, Trash2 } from 'lucide-react'
+import { Users, BookOpen, ImageIcon, ShieldAlert, Trash2 } from 'lucide-react'
 
-type Tab = 'stats' | 'users' | 'clubs' | 'posts'
+type Tab = 'users' | 'clubs' | 'posts'
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-// ── Stats Panel ───────────────────────────────────────────────────────────────
-
-function StatsPanel() {
-  const [stats, setStats] = useState<AdminStats | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    adminApi.stats().then(setStats).finally(() => setLoading(false))
-  }, [])
-
-  if (loading) return <div className="loading-state"><Spinner size={32} /></div>
-  if (!stats) return null
-
-  const cards = [
-    { label: 'Usuarios registrados', value: stats.users, icon: <Users size={22} />, gradient: 'var(--gradient-purple)', shadow: 'var(--shadow-colored)' },
-    { label: 'Clubs creados',        value: stats.clubs, icon: <BookOpen size={22} />, gradient: 'var(--gradient-cyan)', shadow: 'var(--shadow-cyan)' },
-    { label: 'Publicaciones',        value: stats.posts, icon: <ImageIcon size={22} />, gradient: 'var(--gradient-rose)', shadow: 'var(--shadow-rose)' },
-  ]
-
-  return (
-    <div className="admin-stats-grid">
-      {cards.map(c => (
-        <div key={c.label} className="admin-stat-card">
-          <div className="admin-stat-card__icon" style={{ background: c.gradient, boxShadow: c.shadow }}>
-            {c.icon}
-          </div>
-          <div className="admin-stat-card__num">{c.value}</div>
-          <div className="admin-stat-card__label">{c.label}</div>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 // ── Users Panel ───────────────────────────────────────────────────────────────
@@ -50,10 +16,14 @@ function StatsPanel() {
 function UsersPanel({ currentUserId }: { currentUserId: number }) {
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    adminApi.users().then(setUsers).finally(() => setLoading(false))
+    adminApi.users()
+      .then(setUsers)
+      .catch(e => setError(e.message || 'Error al cargar usuarios'))
+      .finally(() => setLoading(false))
   }, [])
 
   async function handleToggleAdmin(user: AdminUser) {
@@ -86,6 +56,7 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
   })
 
   if (loading) return <div className="loading-state"><Spinner size={32} /></div>
+  if (error) return <div className="alert alert-danger">{error}</div>
 
   return (
     <div>
@@ -166,10 +137,14 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
 function ClubsPanel() {
   const [clubs, setClubs] = useState<AdminClub[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    adminApi.clubs().then(setClubs).finally(() => setLoading(false))
+    adminApi.clubs()
+      .then(setClubs)
+      .catch(e => setError(e.message || 'Error al cargar clubs'))
+      .finally(() => setLoading(false))
   }, [])
 
   async function handleDelete(club: AdminClub) {
@@ -186,6 +161,7 @@ function ClubsPanel() {
   })
 
   if (loading) return <div className="loading-state"><Spinner size={32} /></div>
+  if (error) return <div className="alert alert-danger">{error}</div>
 
   return (
     <div>
@@ -302,16 +278,15 @@ function PostsPanel() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'stats', label: 'Estadísticas', icon: <BarChart3 size={14} /> },
-  { id: 'users', label: 'Usuarios',     icon: <Users size={14} /> },
-  { id: 'clubs', label: 'Clubs',        icon: <BookOpen size={14} /> },
-  { id: 'posts', label: 'Publicaciones',icon: <ImageIcon size={14} /> },
+  { id: 'users', label: 'Usuarios',      icon: <Users size={14} /> },
+  { id: 'clubs', label: 'Clubs',         icon: <BookOpen size={14} /> },
+  { id: 'posts', label: 'Publicaciones', icon: <ImageIcon size={14} /> },
 ]
 
 export default function AdminPage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
-  const [tab, setTab] = useState<Tab>('stats')
+  const [tab, setTab] = useState<Tab>('users')
 
   useEffect(() => {
     if (!loading && (!user || !user.roles?.includes('ROLE_ADMIN'))) {
@@ -356,7 +331,6 @@ export default function AdminPage() {
             {TABS.find(t => t.id === tab)?.label}
           </div>
           <div className="profile-section__body">
-            {tab === 'stats' && <StatsPanel />}
             {tab === 'users' && <UsersPanel currentUserId={user.id} />}
             {tab === 'clubs' && <ClubsPanel />}
             {tab === 'posts' && <PostsPanel />}
