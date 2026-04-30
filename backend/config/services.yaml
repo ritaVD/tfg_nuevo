@@ -19,5 +19,9 @@ services:
     App\:
         resource: '../src/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler:
+        arguments:
+            - !service
+                class: PDO
+                factory: ['@database_connection', 'getNativeConnection']
+            - { lock_mode: 2, gc_maxlifetime: 604800 }
