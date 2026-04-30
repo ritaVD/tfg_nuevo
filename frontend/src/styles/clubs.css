@@ -346,7 +346,7 @@
 
 /* ── Club main layout ── */
 
-.ch-main {
+.ch-body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
@@ -354,6 +354,10 @@
   grid-template-columns: 1fr 300px;
   gap: 1.75rem;
   align-items: start;
+}
+
+.ch-main {
+  min-width: 0;
 }
 
 .ch-sidebar {
@@ -1160,7 +1164,7 @@ a.request-item__name--link:hover { color: var(--color-accent); text-decoration: 
    ============================================================ */
 
 @media (max-width: 900px) {
-  .ch-main {
+  .ch-body {
     grid-template-columns: 1fr;
   }
 
@@ -1194,7 +1198,7 @@ a.request-item__name--link:hover { color: var(--color-accent); text-decoration: 
     flex-wrap: wrap;
   }
 
-  .ch-main {
+  .ch-body {
     padding: 1.25rem 1rem;
     gap: 1.25rem;
   }

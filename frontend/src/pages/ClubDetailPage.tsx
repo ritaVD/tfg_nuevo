@@ -206,6 +206,7 @@ function ChatThread({
   const [msgText, setMsgText] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   async function loadMessages() {
@@ -220,7 +221,9 @@ function ChatThread({
   useEffect(() => { if (expanded) loadMessages() }, [expanded])
 
   useEffect(() => {
-    if (expanded) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (expanded && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+    }
   }, [messages, expanded])
 
   async function handleSend(e: FormEvent) {
@@ -295,7 +298,7 @@ function ChatThread({
               Sin mensajes aún. ¡Sé el primero!
             </div>
           ) : (
-            <div className="wapp-messages">
+            <div className="wapp-messages" ref={messagesContainerRef}>
               {messages.map(msg => {
                 const isMe = msg.user.id === userId
                 const name = msg.user.displayName || msg.user.email
@@ -531,6 +534,7 @@ export default function ClubDetailPage() {
   useEffect(() => { if (club) loadChats() }, [club?.id])
   useEffect(() => {
     if (!club) return
+    window.scrollTo({ top: 0 })
     if (tab === 'members') loadMembers()
     if (tab === 'requests') loadRequests()
   }, [tab, club])
