@@ -128,11 +128,11 @@ class NotificationApiController extends AbstractController
             'isRead'    => $n->isRead(),
             'createdAt' => $n->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'refId'     => $n->getRefId(),
-            'actor'     => [
+            'actor'     => $actor ? [
                 'id'          => $actor->getId(),
                 'displayName' => $actor->getDisplayName() ?? $actor->getEmail(),
                 'avatar'      => $actor->getAvatar(),
-            ],
+            ] : null,
             'post'      => $post ? [
                 'id'        => $post->getId(),
                 'imagePath' => $post->getImagePath(),
