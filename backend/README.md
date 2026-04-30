@@ -495,7 +495,7 @@ Al arrancar el contenedor por primera vez, el comando `app:create-admin` crea au
 | Campo      | Valor             |
 |------------|-------------------|
 | Email      | `admin@gmail.com` |
-| Contraseña | `admin`           |
+| Contraseña | `123456`          |
 | Rol        | `ROLE_ADMIN`      |
 
 Con esta cuenta se puede acceder al panel de administración (`/admin`) y realizar cualquier acción privilegiada: ver estadísticas globales, gestionar usuarios (banear/desbanear, eliminar), moderar posts y clubes. El comando es idempotente: si el usuario ya existe simplemente le asigna `ROLE_ADMIN` sin duplicarlo.

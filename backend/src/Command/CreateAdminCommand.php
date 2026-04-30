@@ -26,7 +26,7 @@ class CreateAdminCommand extends Command
     {
         $email       = 'admin@gmail.com';
         $displayName = 'admin';
-        $plainPass   = 'admin';
+        $plainPass   = '123456';
 
         $user = $this->userRepo->findOneBy(['email' => $email]);
 
@@ -48,7 +48,7 @@ class CreateAdminCommand extends Command
 
         $this->em->flush();
 
-        $output->writeln('<info>✓ admin tiene ROLE_ADMIN. Credenciales: email=admin@gmail.com / pass=admin</info>');
+        $output->writeln('<info>✓ admin tiene ROLE_ADMIN. Credenciales: email=admin@gmail.com / pass=123456</info>');
 
         return Command::SUCCESS;
     }
