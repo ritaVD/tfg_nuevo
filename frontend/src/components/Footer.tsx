@@ -14,7 +14,7 @@ export default function Footer() {
         <div>
           <div className="footer__brand-name">
             <BookOpen size={18} />
-            TFGdaw
+            Books&amp;Gossip
           </div>
           <p className="footer__brand-desc">
             Tu plataforma para descubrir libros, gestionar estanterías y conectar con otros lectores en clubs de lectura.
@@ -65,7 +65,7 @@ export default function Footer() {
       </div>
 
       <div className="footer__bottom">
-        <span className="footer__copy">&copy; {year} TFGdaw — Todos los derechos reservados.</span>
+        <span className="footer__copy">&copy; {year} Books&amp;Gossip — Todos los derechos reservados.</span>
         <span className="footer__tagline">Hecho con ♥ para lectores</span>
       </div>
     </footer>

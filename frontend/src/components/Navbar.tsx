@@ -310,7 +310,7 @@ export default function Navbar() {
             <div className="navbar__brand-icon">
               <BookOpen size={18} />
             </div>
-            <span>TFGdaw</span>
+            <span>Books&amp;Gossip</span>
           </Link>
 
           {/* Desktop nav links */}
