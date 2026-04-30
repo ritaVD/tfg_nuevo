@@ -16,6 +16,10 @@ final class Version20260408000000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        if ($schema->hasTable('book_review')) {
+            return;
+        }
+
         $this->addSql('CREATE TABLE book_review (
             id INT AUTO_INCREMENT NOT NULL,
             user_id INT NOT NULL,

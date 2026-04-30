@@ -16,6 +16,10 @@ final class Version20260407120000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        if ($schema->hasTable('notification')) {
+            return;
+        }
+
         $this->addSql('CREATE TABLE notification (
             id INT AUTO_INCREMENT NOT NULL,
             recipient_id INT NOT NULL,
