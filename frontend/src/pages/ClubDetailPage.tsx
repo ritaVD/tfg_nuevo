@@ -705,13 +705,13 @@ export default function ClubDetailPage() {
           </div>
 
           {/* Chats */}
-          {tab === 'chats' && club.visibility === 'private' && !isMember && (
+          {tab === 'chats' && club.visibility === 'private' && !isMember && !isGlobalAdmin && (
             <div className="empty-state">
               <div className="empty-state__icon"><Lock size={40} /></div>
               <p className="empty-state__title">Hilos solo disponibles para miembros del club</p>
             </div>
           )}
-          {tab === 'chats' && (club.visibility !== 'private' || isMember) && (
+          {tab === 'chats' && (club.visibility !== 'private' || isMember || isGlobalAdmin) && (
             <div>
               {(isAdmin || isGlobalAdmin) && (
                 <div style={{ marginBottom: '1rem' }}>
@@ -760,7 +760,7 @@ export default function ClubDetailPage() {
                       chat={chat}
                       clubId={clubId}
                       isAdmin={isAdmin || !!isGlobalAdmin}
-                      isMember={isMember}
+                      isMember={isMember || !!isGlobalAdmin}
                       userId={user?.id ?? null}
                       onDelete={chatId => setChats(prev => prev.filter(c => c.id !== chatId))}
                     />
@@ -771,14 +771,14 @@ export default function ClubDetailPage() {
           )}
 
           {/* Members */}
-          {tab === 'members' && club.visibility === 'private' && !isMember && (
+          {tab === 'members' && club.visibility === 'private' && !isMember && !isGlobalAdmin && (
             <div className="empty-state">
               <div className="empty-state__icon"><Lock size={40} /></div>
               <p className="empty-state__title">Club privado</p>
               <p className="empty-state__desc">Los miembros solo son visibles para los integrantes del club</p>
             </div>
           )}
-          {tab === 'members' && (club.visibility !== 'private' || isMember) && (
+          {tab === 'members' && (club.visibility !== 'private' || isMember || isGlobalAdmin) && (
             <div>
               {membersLoading ? (
                 <div className="loading-state"><Spinner size={28} /></div>

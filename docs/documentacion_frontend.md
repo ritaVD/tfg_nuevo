@@ -312,9 +312,10 @@ toast('Ya eres miembro', 'info')
 
 Cada notificación se autodismiss a los 3 500 ms. Los toasts se apilan en la esquina inferior derecha con `aria-live="polite"` para accesibilidad.
 
+![ToastImage](images/toast.png)
 ### 4.3 Estado local
 
-El resto del estado de la aplicación es **local al componente** que lo necesita, gestionado con `useState` y `useEffect` de React. No se usa ninguna biblioteca de gestión de estado global adicional (Redux, Zustand, etc.). Esta decisión es adecuada dado el alcance de la aplicación: la mayoría de los datos son específicos de la página activa y no necesitan compartirse entre rutas.
+El resto del estado de la aplicación es local al componente que lo necesita, gestionado con `useState` y `useEffect` de React. Esta decisión es adecuada dado el alcance de la aplicación: la mayoría de los datos son específicos de la página activa y no necesitan compartirse entre rutas.
 
 ---
 
@@ -351,7 +352,7 @@ Tras un login exitoso, `LoginPage` lee `location.state.from` y redirige al usuar
 
 ### 5.3 AdminPage
 
-La ruta `/admin` no usa `<PrivateRoute>` porque su protección es por **rol**, no solo por autenticación. `AdminPage` verifica `user?.roles?.includes('ROLE_ADMIN')` al montarse y ejecuta `useNavigate('/')` inmediatamente si la condición no se cumple. Esto permite que un usuario autenticado sin rol de admin no acceda al panel aunque conozca la URL.
+La ruta `/admin` no usa `<PrivateRoute>` porque su protección es por rol, no solo por autenticación. `AdminPage` verifica `user?.roles?.includes('ROLE_ADMIN')` al montarse y ejecuta `useNavigate('/')` inmediatamente si la condición no se cumple. Esto permite que un usuario autenticado sin rol de admin no acceda al panel aunque conozca la URL.
 
 ---
 

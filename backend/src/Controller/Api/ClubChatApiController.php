@@ -261,7 +261,9 @@ class ClubChatApiController extends AbstractController
         [$club, $chat, $error] = $this->resolveChat($clubId, $chatId, $clubRepo, $chatRepo);
         if ($error) return $error;
 
-        if (!$memberRepo->findOneBy(['club' => $club, 'user' => $this->getUser()])) {
+        $isMember   = $memberRepo->findOneBy(['club' => $club, 'user' => $this->getUser()]);
+        $isWebAdmin = $this->isGranted('ROLE_ADMIN');
+        if (!$isMember && !$isWebAdmin) {
             return $this->json(['error' => 'Solo los miembros pueden enviar mensajes'], 403);
         }
 
