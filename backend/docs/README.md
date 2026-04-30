@@ -57,4 +57,18 @@ Bienvenido a la documentación técnica del backend de **TFGdaw**, una plataform
 
 ---
 
+## Usuario de prueba — Administrador general
+
+Al arrancar el contenedor por primera vez, el comando `app:create-admin` crea automáticamente una cuenta con privilegios de administrador. Estas credenciales están pensadas únicamente para pruebas y evaluación de la plataforma.
+
+| Campo        | Valor              |
+|--------------|--------------------|
+| Email        | `admin@gmail.com`  |
+| Contraseña   | `admin`            |
+| Rol          | `ROLE_ADMIN`       |
+
+Con esta cuenta se puede acceder al panel de administración (`/admin`) y realizar cualquier acción privilegiada: ver estadísticas globales, gestionar usuarios (banear/desbanear, eliminar), moderar posts y clubes. El comando es idempotente: si el usuario ya existe simplemente le asigna `ROLE_ADMIN` sin duplicarlo.
+
+---
+
 > Consulta cada documento en orden para obtener una comprensión completa del sistema.

@@ -24,7 +24,7 @@ class CreateAdminCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $email       = 'admin';
+        $email       = 'admin@gmail.com';
         $displayName = 'admin';
         $plainPass   = 'admin';
 
@@ -48,7 +48,7 @@ class CreateAdminCommand extends Command
 
         $this->em->flush();
 
-        $output->writeln('<info>✓ admin tiene ROLE_ADMIN. Credenciales: email=admin / pass=admin</info>');
+        $output->writeln('<info>✓ admin tiene ROLE_ADMIN. Credenciales: email=admin@gmail.com / pass=admin</info>');
 
         return Command::SUCCESS;
     }
