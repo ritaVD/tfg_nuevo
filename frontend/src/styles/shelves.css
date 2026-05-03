@@ -284,15 +284,11 @@
 }
 
 .shelf-move__dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
   background: var(--color-surface);
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   min-width: 180px;
-  z-index: 20;
   overflow: hidden;
   animation: scale-in 0.15s ease both;
   transform-origin: top right;

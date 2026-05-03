@@ -539,13 +539,25 @@ export default function ShelvesPage() {
                               <button
                                 className="shelf-move__btn btn btn-secondary btn-sm"
                                 title="Mover a otra estantería"
-                                onClick={() => setOpenMoveId(openMoveId === shelfBook.id ? null : shelfBook.id)}
+                                onClick={(e) => {
+                                  if (openMoveId === shelfBook.id) {
+                                    setOpenMoveId(null)
+                                  } else {
+                                    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect()
+                                    setMovePos({ top: rect.bottom + 6, right: window.innerWidth - rect.right })
+                                    setOpenMoveId(shelfBook.id)
+                                  }
+                                }}
                               >
                                 <ArrowRightLeft size={13} />
                                 Mover
                               </button>
-                              {openMoveId === shelfBook.id && (
-                                <div className="shelf-move__dropdown">
+                              {openMoveId === shelfBook.id && movePos && (
+                                <div
+                                  className="shelf-move__dropdown"
+                                  ref={moveDropdownRef}
+                                  style={{ position: 'fixed', top: movePos.top, right: movePos.right, zIndex: 9999 }}
+                                >
                                   {otherShelves.map(s => (
                                     <button
                                       key={s.id}
