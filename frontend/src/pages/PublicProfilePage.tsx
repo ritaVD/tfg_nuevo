@@ -32,6 +32,7 @@ interface PublicProfile {
   followers: number
   following: number
   followStatus: 'none' | 'pending' | 'accepted'
+  isPrivate: boolean
   shelves: PublicShelf[] | null
   clubs: { id: number; name: string; visibility: string; role: string }[] | null
 }
@@ -192,7 +193,17 @@ export default function PublicProfilePage() {
             <ImageIcon size={15} /> Publicaciones
           </div>
           <div className="profile-section__body">
-            {postsLoading ? (
+            {profile.isPrivate && !isOwnProfile && profile.followStatus !== 'accepted' ? (
+              <div className="empty-state empty-state--compact">
+                <div className="empty-state__icon"><Lock size={28} /></div>
+                <p className="empty-state__title">Perfil privado</p>
+                <p className="empty-state__desc">
+                  {profile.followStatus === 'pending'
+                    ? 'Tu solicitud de seguimiento está pendiente de aprobación.'
+                    : 'Sigue a este usuario para ver sus publicaciones.'}
+                </p>
+              </div>
+            ) : postsLoading ? (
               <div className="loading-state loading-state--sm">
                 <Spinner size={28} />
               </div>

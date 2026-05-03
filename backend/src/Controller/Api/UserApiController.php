@@ -322,6 +322,7 @@ class UserApiController extends AbstractController
             'following'    => $this->followRepo->countFollowing($user),
             'followStatus' => $followStatus,
             'isFollowing'  => $followStatus === 'accepted',
+            'isPrivate'    => $user->isPrivate(),
             'shelves'     => $user->isShelvesPublic()
                 ? array_map(
                     fn($s) => [

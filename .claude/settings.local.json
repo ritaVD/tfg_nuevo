@@ -43,7 +43,9 @@
       "PowerShell(Get-Process *)",
       "PowerShell(\\(Get-Content \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\README_BACKEND.md\" | Measure-Object -Line\\).Lines)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\frontend\" -Recurse -Include \"*.js\", \"*.jsx\", \"*.ts\", \"*.tsx\")",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\backend\\\\src\" -Recurse)",
+      "Bash(Select-Object -First 50)"
     ]
   }
 }

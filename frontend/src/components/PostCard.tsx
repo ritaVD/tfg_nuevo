@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { postsApi, type Post, type PostComment } from '../api/posts'
 import Spinner from './Spinner'
+import ConfirmDialog from './ConfirmDialog'
 import { Heart, MessageCircle, Trash2, X } from 'lucide-react'
 
 function dicebear(seed: string) {
@@ -33,6 +34,7 @@ export default function PostCard({
   const [commentText, setCommentText] = useState('')
   const [sendingComment, setSendingComment] = useState(false)
   const [liking, setLiking] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   async function handleLike() {
     if (!meId || liking) return
@@ -78,7 +80,6 @@ export default function PostCard({
   }
 
   async function handleDeletePost() {
-    if (!confirm('¿Eliminar este post?')) return
     try {
       await postsApi.delete(post.id)
       onDelete?.(post.id)
@@ -88,12 +89,13 @@ export default function PostCard({
   const canDelete = onDelete && (meId === post.user.id || isAdmin)
 
   return (
+    <>
     <div className="post-card">
       {/* Image */}
       <div className="post-card__img-wrap">
         <img src={`/uploads/posts/${post.imagePath}`} alt="Post" className="post-card__img" />
         {canDelete && (
-          <button className="post-card__delete-btn" onClick={handleDeletePost} title="Eliminar post">
+          <button className="post-card__delete-btn" onClick={() => setConfirmDelete(true)} title="Eliminar post">
             <Trash2 size={14} />
           </button>
         )}
@@ -189,5 +191,15 @@ export default function PostCard({
         )}
       </div>
     </div>
+
+    <ConfirmDialog
+      open={confirmDelete}
+      title="Eliminar post"
+      message="¿Seguro que quieres eliminar este post? Esta acción no se puede deshacer."
+      confirmLabel="Eliminar"
+      onConfirm={() => { setConfirmDelete(false); handleDeletePost() }}
+      onCancel={() => setConfirmDelete(false)}
+    />
+    </>
   )
 }

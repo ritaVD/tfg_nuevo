@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { adminApi, type AdminUser, type AdminClub, type AdminPost } from '../api/admin'
 import Spinner from '../components/Spinner'
+import ConfirmDialog from '../components/ConfirmDialog'
 import { Users, BookOpen, ImageIcon, ShieldAlert, Trash2 } from 'lucide-react'
 
 type Tab = 'users' | 'clubs' | 'posts'
@@ -18,6 +19,7 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [pending, setPending] = useState<{ title: string; message: string; onConfirm: () => void } | null>(null)
 
   useEffect(() => {
     adminApi.users()
@@ -27,27 +29,45 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
   }, [])
 
   async function handleToggleAdmin(user: AdminUser) {
-    if (!confirm(`${user.isAdmin ? 'Quitar' : 'Dar'} rol de administrador a ${user.displayName || user.email}?`)) return
-    try {
-      await adminApi.setRole(user.id, !user.isAdmin)
-      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isAdmin: !u.isAdmin } : u))
-    } catch { /* ignore */ }
+    setPending({
+      title: user.isAdmin ? 'Quitar rol de administrador' : 'Dar rol de administrador',
+      message: `${user.isAdmin ? 'Quitar' : 'Dar'} el rol de administrador a ${user.displayName || user.email}.`,
+      onConfirm: async () => {
+        setPending(null)
+        try {
+          await adminApi.setRole(user.id, !user.isAdmin)
+          setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isAdmin: !u.isAdmin } : u))
+        } catch { /* ignore */ }
+      },
+    })
   }
 
   async function handleToggleBan(user: AdminUser) {
-    if (!confirm(`${user.isBanned ? 'Desbanear' : 'Banear'} a ${user.displayName || user.email}?`)) return
-    try {
-      await adminApi.setBan(user.id, !user.isBanned)
-      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isBanned: !u.isBanned } : u))
-    } catch { /* ignore */ }
+    setPending({
+      title: user.isBanned ? 'Desbanear usuario' : 'Banear usuario',
+      message: `${user.isBanned ? 'Desbanear' : 'Banear'} a ${user.displayName || user.email}.`,
+      onConfirm: async () => {
+        setPending(null)
+        try {
+          await adminApi.setBan(user.id, !user.isBanned)
+          setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isBanned: !u.isBanned } : u))
+        } catch { /* ignore */ }
+      },
+    })
   }
 
   async function handleDelete(user: AdminUser) {
-    if (!confirm(`¿Eliminar la cuenta de ${user.displayName || user.email}? Esta acción no se puede deshacer.`)) return
-    try {
-      await adminApi.deleteUser(user.id)
-      setUsers(prev => prev.filter(u => u.id !== user.id))
-    } catch { /* ignore */ }
+    setPending({
+      title: 'Eliminar cuenta',
+      message: `¿Eliminar la cuenta de ${user.displayName || user.email}? Esta acción no se puede deshacer.`,
+      onConfirm: async () => {
+        setPending(null)
+        try {
+          await adminApi.deleteUser(user.id)
+          setUsers(prev => prev.filter(u => u.id !== user.id))
+        } catch { /* ignore */ }
+      },
+    })
   }
 
   const filtered = users.filter(u => {
@@ -128,6 +148,17 @@ function UsersPanel({ currentUserId }: { currentUserId: number }) {
           </div>
         )}
       </div>
+      {pending && (
+        <ConfirmDialog
+          open
+          title={pending.title}
+          message={pending.message}
+          confirmLabel="Confirmar"
+          variant="danger"
+          onConfirm={pending.onConfirm}
+          onCancel={() => setPending(null)}
+        />
+      )}
     </div>
   )
 }
@@ -139,6 +170,7 @@ function ClubsPanel() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [pendingClub, setPendingClub] = useState<AdminClub | null>(null)
 
   useEffect(() => {
     adminApi.clubs()
@@ -148,7 +180,13 @@ function ClubsPanel() {
   }, [])
 
   async function handleDelete(club: AdminClub) {
-    if (!confirm(`¿Eliminar el club "${club.name}"? Esta acción no se puede deshacer.`)) return
+    setPendingClub(club)
+  }
+
+  async function doDelete() {
+    if (!pendingClub) return
+    const club = pendingClub
+    setPendingClub(null)
     try {
       await adminApi.deleteClub(club.id)
       setClubs(prev => prev.filter(c => c.id !== club.id))
@@ -213,6 +251,17 @@ function ClubsPanel() {
           </div>
         )}
       </div>
+      {pendingClub && (
+        <ConfirmDialog
+          open
+          title="Eliminar club"
+          message={`¿Eliminar el club "${pendingClub.name}"? Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          variant="danger"
+          onConfirm={doDelete}
+          onCancel={() => setPendingClub(null)}
+        />
+      )}
     </div>
   )
 }
@@ -222,13 +271,16 @@ function ClubsPanel() {
 function PostsPanel() {
   const [posts, setPosts] = useState<AdminPost[]>([])
   const [loading, setLoading] = useState(true)
+  const [pendingPost, setPendingPost] = useState<AdminPost | null>(null)
 
   useEffect(() => {
     adminApi.posts().then(setPosts).finally(() => setLoading(false))
   }, [])
 
-  async function handleDelete(post: AdminPost) {
-    if (!confirm('¿Eliminar esta publicación?')) return
+  async function doDelete() {
+    if (!pendingPost) return
+    const post = pendingPost
+    setPendingPost(null)
     try {
       await adminApi.deletePost(post.id)
       setPosts(prev => prev.filter(p => p.id !== post.id))
@@ -264,13 +316,24 @@ function PostsPanel() {
           </div>
           <button
             className="btn btn-danger btn-sm btn-icon"
-            onClick={() => handleDelete(post)}
+            onClick={() => setPendingPost(post)}
             title="Eliminar publicación"
           >
             <Trash2 size={14} />
           </button>
         </div>
       ))}
+      {pendingPost && (
+        <ConfirmDialog
+          open
+          title="Eliminar publicación"
+          message="¿Eliminar esta publicación? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          variant="danger"
+          onConfirm={doDelete}
+          onCancel={() => setPendingPost(null)}
+        />
+      )}
     </div>
   )
 }

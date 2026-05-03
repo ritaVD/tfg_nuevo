@@ -6,6 +6,7 @@ import { reviewsApi, type Review, type ReviewStats, type ReviewsResponse } from 
 import { readingProgressApi } from '../api/readingProgress'
 import { useAuth } from '../context/AuthContext'
 import Spinner from '../components/Spinner'
+import ConfirmDialog from '../components/ConfirmDialog'
 import {
   ArrowLeft, BookOpen, Star, Building, Calendar, Globe,
   Layers, Hash, BookMarked, Plus, CheckCircle, X, Pencil, Trash2, BookOpenCheck,
@@ -99,6 +100,7 @@ function ReviewForm({
   const [content, setContent] = useState(existing?.content ?? '')
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(!existing)
 
@@ -123,7 +125,6 @@ function ReviewForm({
   }
 
   async function handleDelete() {
-    if (!confirm('¿Eliminar tu reseña?')) return
     setDeleting(true)
     try {
       const res = await reviewsApi.delete(externalId)
@@ -137,25 +138,35 @@ function ReviewForm({
 
   if (existing && !editing) {
     return (
-      <div className="review-mine">
-        <div className="review-mine__head">
-          <div className="review-mine__head-left">
-            <Stars rating={existing.rating} size={16} />
-            <span className="review-mine__label">Tu reseña</span>
+      <>
+        <div className="review-mine">
+          <div className="review-mine__head">
+            <div className="review-mine__head-left">
+              <Stars rating={existing.rating} size={16} />
+              <span className="review-mine__label">Tu reseña</span>
+            </div>
+            <div className="review-mine__actions">
+              <button className="btn btn-ghost btn-sm" onClick={() => setEditing(true)} title="Editar">
+                <Pencil size={13} />
+              </button>
+              <button className="btn btn-danger btn-sm" onClick={() => setConfirmDelete(true)} disabled={deleting} title="Eliminar">
+                {deleting ? <Spinner size={13} /> : <Trash2 size={13} />}
+              </button>
+            </div>
           </div>
-          <div className="review-mine__actions">
-            <button className="btn btn-ghost btn-sm" onClick={() => setEditing(true)} title="Editar">
-              <Pencil size={13} />
-            </button>
-            <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={deleting} title="Eliminar">
-              {deleting ? <Spinner size={13} /> : <Trash2 size={13} />}
-            </button>
-          </div>
+          {existing.content && (
+            <p className="review-mine__text">{existing.content}</p>
+          )}
         </div>
-        {existing.content && (
-          <p className="review-mine__text">{existing.content}</p>
-        )}
-      </div>
+        <ConfirmDialog
+          open={confirmDelete}
+          title="Eliminar reseña"
+          message="¿Seguro que quieres eliminar tu reseña? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          onConfirm={() => { setConfirmDelete(false); handleDelete() }}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      </>
     )
   }
 

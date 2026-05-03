@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 use App\Entity\Post;
 use App\Entity\PostComment;
 use App\Entity\PostLike;
+use App\Repository\FollowRepository;
 use App\Repository\PostCommentRepository;
 use App\Repository\PostLikeRepository;
 use App\Repository\PostRepository;
@@ -40,14 +41,23 @@ class PostApiController extends AbstractController
 
     // ── GET /api/users/{id}/posts  →  posts de un usuario ───
     #[Route('/users/{id}/posts', name: 'by_user', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function byUser(int $id, UserRepository $userRepo): JsonResponse
+    public function byUser(int $id, UserRepository $userRepo, FollowRepository $followRepo): JsonResponse
     {
         $user = $userRepo->find($id);
         if (!$user) {
             return $this->json(['error' => 'Usuario no encontrado'], 404);
         }
 
-        $me    = $this->getUser();
+        /** @var \App\Entity\User|null $me */
+        $me = $this->getUser();
+
+        if ($user->isPrivate() && (!$me || $me->getId() !== $user->getId())) {
+            $follow = $me ? $followRepo->findFollow($me, $user) : null;
+            if (!$follow || !$follow->isAccepted()) {
+                return $this->json(['error' => 'Este perfil es privado'], 403);
+            }
+        }
+
         $posts = $this->postRepo->findByUser($user);
 
         return $this->json(array_map(fn(Post $p) => $this->serialize($p, $me), $posts));

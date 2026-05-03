@@ -206,6 +206,7 @@ function ChatThread({
   const [msgText, setMsgText] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
+  const [confirmDeleteThread, setConfirmDeleteThread] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -250,7 +251,6 @@ function ChatThread({
   }
 
   async function handleDeleteThread() {
-    if (!confirm(`¿Eliminar el hilo "${chat.title}"?`)) return
     try { await chatsApi.delete(clubId, chat.id); onDelete(chat.id) } catch { /* ignore */ }
   }
 
@@ -278,7 +278,7 @@ function ChatThread({
           {isAdmin && (
             <button
               className="btn btn-ghost btn-sm btn-icon btn-ghost--danger"
-              onClick={e => { e.stopPropagation(); handleDeleteThread() }}
+              onClick={e => { e.stopPropagation(); setConfirmDeleteThread(true) }}
               title="Eliminar hilo"
             >
               <Trash2 size={14} />
@@ -358,6 +358,15 @@ function ChatThread({
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={confirmDeleteThread}
+        title="¿Eliminar hilo?"
+        message={<>¿Seguro que quieres eliminar el hilo <strong>{chat.title}</strong>? Se borrarán todos sus mensajes.</>}
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={() => { setConfirmDeleteThread(false); handleDeleteThread() }}
+        onCancel={() => setConfirmDeleteThread(false)}
+      />
     </div>
   )
 }
@@ -498,6 +507,7 @@ export default function ClubDetailPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmKickId, setConfirmKickId] = useState<number | null>(null)
 
   async function loadClub() {
     setLoading(true); setError('')
@@ -574,7 +584,6 @@ export default function ClubDetailPage() {
   }
 
   async function handleKick(memberId: number) {
-    if (!confirm('¿Expulsar a este miembro?')) return
     try {
       await clubsApi.kickMember(clubId, memberId)
       setMembers(prev => prev.filter(m => m.id !== memberId))
@@ -814,7 +823,7 @@ export default function ClubDetailPage() {
                             {member.role === 'admin' ? 'Admin' : 'Miembro'}
                           </span>
                           {canKick && (
-                            <button className="btn btn-danger btn-sm" onClick={() => handleKick(member.id)}>
+                            <button className="btn btn-danger btn-sm" onClick={() => setConfirmKickId(member.id)}>
                               Expulsar
                             </button>
                           )}
@@ -917,6 +926,15 @@ export default function ClubDetailPage() {
         variant="danger"
         onConfirm={doDelete}
         onCancel={() => setConfirmDelete(false)}
+      />
+      <ConfirmDialog
+        open={confirmKickId !== null}
+        title="¿Expulsar miembro?"
+        message="¿Seguro que quieres expulsar a este miembro del club?"
+        confirmLabel="Expulsar"
+        variant="danger"
+        onConfirm={() => { const id = confirmKickId!; setConfirmKickId(null); handleKick(id) }}
+        onCancel={() => setConfirmKickId(null)}
       />
     </>
   )
