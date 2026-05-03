@@ -1034,7 +1034,7 @@ Mismo proceso que las imágenes de posts: validar extensión, generar nombre ún
 
 ---
 
-## Resumen para la defensa
+## Resumen 
 
 **¿Qué es este proyecto?**
 Una red social para lectores. Los usuarios pueden publicar imágenes (como Instagram), seguirse entre sí, gestionar estanterías de libros, unirse a clubes de lectura con chat, y llevar un registro de su progreso lector.
