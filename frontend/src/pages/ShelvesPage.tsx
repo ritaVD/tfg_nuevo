@@ -265,14 +265,16 @@ export default function ShelvesPage() {
   const [confirmBookId, setConfirmBookId] = useState<number | null>(null)
   const [removingBookId, setRemovingBookId] = useState<number | null>(null)
   const [openMoveId, setOpenMoveId] = useState<number | null>(null)
+  const [movePos, setMovePos] = useState<{ top: number; right: number } | null>(null)
   const moveRef = useRef<HTMLDivElement | null>(null)
+  const moveDropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (openMoveId === null) return
     const handler = (e: MouseEvent) => {
-      if (moveRef.current && !moveRef.current.contains(e.target as Node)) {
-        setOpenMoveId(null)
-      }
+      const inWrapper = moveRef.current?.contains(e.target as Node)
+      const inDropdown = moveDropdownRef.current?.contains(e.target as Node)
+      if (!inWrapper && !inDropdown) setOpenMoveId(null)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
