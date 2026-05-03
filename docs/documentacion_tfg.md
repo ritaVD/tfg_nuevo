@@ -528,7 +528,6 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - **Crear**: formulario en sidebar → `POST /api/shelves`. Toast: `Estantería "[nombre]" creada`.
 - **Eliminar**: botón de papelera con confirmación inline → `DELETE /api/shelves/{id}`. Toast: `Estantería "[nombre]" eliminada`. Si era la activa, selecciona la siguiente disponible.
 - **Seleccionar**: clic en nombre → carga libros con `GET /api/shelves/{id}/books`.
-- **Mover libro**: desplegable "Mover" lista las otras estanterías → `POST /api/shelves/{origen}/books/{bookId}/move`. Toast: `"[título]" movido a "[destino]"`.
 - **Quitar libro**: botón rojo con confirmación inline → `DELETE /api/shelves/{id}/books/{bookId}`. Toast: `"[título]" quitado de la estantería`.
 
 **Estados de error:**

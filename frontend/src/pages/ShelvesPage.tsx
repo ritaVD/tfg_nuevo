@@ -6,7 +6,7 @@ import Spinner from '../components/Spinner'
 import { useToast } from '../components/Toast'
 import {
   BookOpen, Plus, Trash2, Search,
-  BookMarked, ArrowRightLeft, BookOpenCheck,
+  BookMarked, BookOpenCheck,
   ChevronDown, Check, X, Layers,
 } from 'lucide-react'
 
@@ -264,21 +264,6 @@ export default function ShelvesPage() {
   const [deletingShelfId, setDeletingShelfId] = useState<number | null>(null)
   const [confirmBookId, setConfirmBookId] = useState<number | null>(null)
   const [removingBookId, setRemovingBookId] = useState<number | null>(null)
-  const [openMoveId, setOpenMoveId] = useState<number | null>(null)
-  const [movePos, setMovePos] = useState<{ top: number; right: number } | null>(null)
-  const moveRef = useRef<HTMLDivElement | null>(null)
-  const moveDropdownRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    if (openMoveId === null) return
-    const handler = (e: MouseEvent) => {
-      const inWrapper = moveRef.current?.contains(e.target as Node)
-      const inDropdown = moveDropdownRef.current?.contains(e.target as Node)
-      if (!inWrapper && !inDropdown) setOpenMoveId(null)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [openMoveId])
 
   async function loadShelves() {
     setShelvesLoading(true)
@@ -360,18 +345,6 @@ export default function ShelvesPage() {
     }
   }
 
-  async function handleMoveBook(shelfBook: ShelfBook, targetShelfId: number) {
-    if (!activeShelf) return
-    setOpenMoveId(null)
-    try {
-      await shelvesApi.moveBook(activeShelf, shelfBook.id, targetShelfId)
-      setBooks(prev => prev.filter(b => b.id !== shelfBook.id))
-      const target = shelves.find(s => s.id === targetShelfId)
-      toast(`"${shelfBook.book.title}" movido a "${target?.name}"`, 'success')
-    } catch {
-      toast('Error al mover el libro', 'error')
-    }
-  }
 
   const activeShelfData = shelves.find(s => s.id === activeShelf)
 
@@ -511,7 +484,6 @@ export default function ShelvesPage() {
                     </Link>
                   </div>
                 ) : (() => {
-                  const otherShelves = shelves.filter(s => s.id !== activeShelf)
                   return books.map(shelfBook => {
                     const cover = shelfBook.book.thumbnail || shelfBook.book.coverUrl
                     return (
@@ -531,46 +503,6 @@ export default function ShelvesPage() {
                           )}
                         </div>
                         <div className="shelf-book__actions">
-                          {otherShelves.length > 0 && (
-                            <div
-                              className="shelf-move"
-                              ref={openMoveId === shelfBook.id ? moveRef : undefined}
-                            >
-                              <button
-                                className="shelf-move__btn btn btn-secondary btn-sm"
-                                title="Mover a otra estantería"
-                                onClick={(e) => {
-                                  if (openMoveId === shelfBook.id) {
-                                    setOpenMoveId(null)
-                                  } else {
-                                    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect()
-                                    setMovePos({ top: rect.bottom + 6, right: window.innerWidth - rect.right })
-                                    setOpenMoveId(shelfBook.id)
-                                  }
-                                }}
-                              >
-                                <ArrowRightLeft size={13} />
-                                Mover
-                              </button>
-                              {openMoveId === shelfBook.id && movePos && (
-                                <div
-                                  className="shelf-move__dropdown"
-                                  ref={moveDropdownRef}
-                                  style={{ position: 'fixed', top: movePos.top, right: movePos.right, zIndex: 9999 }}
-                                >
-                                  {otherShelves.map(s => (
-                                    <button
-                                      key={s.id}
-                                      className="shelf-move__option"
-                                      onClick={() => handleMoveBook(shelfBook, s.id)}
-                                    >
-                                      {s.name}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
                           {confirmBookId === shelfBook.id ? (
                             <div className="inline-confirm">
                               <span className="inline-confirm__label">¿Quitar?</span>

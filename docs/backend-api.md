@@ -479,16 +479,6 @@ Actualizar el estado de lectura de un libro.
 
 ---
 
-### `POST /api/shelves/{id}/books/{bookId}/move`
-Mover un libro a otra estantería.
-
-**Auth:** requerida  
-**Body JSON:** `{ "targetShelfId": 3 }`  
-**Response 200:** `{ "id": 10, "targetShelfId": 3, "status": "reading", "book": {...} }`  
-**Errores:** 400 (misma estantería), 404 (estanterías no encontradas), 409 (ya existe en destino).
-
----
-
 ### `DELETE /api/shelves/{id}/books/{bookId}`
 Quitar libro de la estantería.
 

@@ -549,12 +549,6 @@ Las estanterías son colecciones personales de libros. Cada usuario puede tener 
 | `reading` | Leyendo actualmente |
 | `read` | Ya leído |
 
-### Mover libro entre estanterías
-
-**Endpoint:** `POST /api/shelves/{id}/books/{bookId}/move`
-
-Cambia la estantería de un ShelfBook sin borrar ni duplicar el libro.
-
 ---
 
 ## 9. Integración con Google Books API
@@ -968,7 +962,6 @@ Mismo proceso que las imágenes de posts: validar extensión, generar nombre ún
 | GET | `/api/shelves/{id}/books` | Libros de una estantería |
 | POST | `/api/shelves/{id}/books` | Añadir libro |
 | PATCH | `/api/shelves/{id}/books/{bId}` | Cambiar estado |
-| POST | `/api/shelves/{id}/books/{bId}/move` | Mover a otra estantería |
 | DELETE | `/api/shelves/{id}/books/{bId}` | Quitar libro |
 
 ### Clubes

@@ -275,48 +275,6 @@
 
 /* ── Move button dropdown ── */
 
-.shelf-move {
-  position: relative;
-}
-
-.shelf-move__btn {
-  /* inherits btn classes from TSX */
-}
-
-.shelf-move__dropdown {
-  background: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  min-width: 180px;
-  overflow: hidden;
-  animation: scale-in 0.15s ease both;
-  transform-origin: top right;
-}
-
-.shelf-move__option {
-  display: block;
-  width: 100%;
-  padding: 0.625rem 1rem;
-  font-size: 0.85rem;
-  color: var(--color-text);
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  font-family: var(--font-sans);
-  transition: background var(--transition), color var(--transition);
-}
-
-.shelf-move__option:hover {
-  background: rgba(124,58,237,0.06);
-  color: var(--color-primary);
-}
-
-.shelf-move__option:not(:last-child) {
-  border-bottom: 1px solid var(--color-border-light);
-}
-
 /* ============================================================
    READING TRACKER
    ============================================================ */

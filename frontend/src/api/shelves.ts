@@ -27,6 +27,4 @@ export const shelvesApi = {
     apiFetch<ShelfBook>(`/shelves/${shelfId}/books/${bookId}`, 'PATCH', { status }),
   removeBook: (shelfId: number, bookId: number) =>
     apiFetch<void>(`/shelves/${shelfId}/books/${bookId}`, 'DELETE'),
-  moveBook: (sourceShelfId: number, bookId: number, targetShelfId: number) =>
-    apiFetch<void>(`/shelves/${sourceShelfId}/books/${bookId}/move`, 'POST', { targetShelfId }),
 }

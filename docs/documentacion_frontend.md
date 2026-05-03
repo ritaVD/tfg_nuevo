@@ -417,7 +417,6 @@ Comportamiento común a ambas:
 | `shelvesApi.addBook(shelfId, externalId, status)`    | POST   | `/shelves/{shelfId}/books`                | Añade un libro a la estantería     |
 | `shelvesApi.updateStatus(shelfId, bookId, status)`   | PATCH  | `/shelves/{shelfId}/books/{bookId}`       | Cambia estado de lectura           |
 | `shelvesApi.removeBook(shelfId, bookId)`             | DELETE | `/shelves/{shelfId}/books/{bookId}`       | Quita un libro de la estantería    |
-| `shelvesApi.moveBook(srcId, bookId, dstId)`          | POST   | `/shelves/{srcId}/books/{bookId}/move`    | Mueve libro a otra estantería      |
 
 **Tipo `ReadingStatus`:** `'want_to_read' | 'reading' | 'read'`
 
@@ -811,7 +810,6 @@ Una vez añadido el libro a una estantería, el botón correspondiente cambia a 
 |-----------------|------------------------------------------|----------------------------------------------|
 | Crear           | `POST /api/shelves`                      | Toast "Estantería [nombre] creada"           |
 | Eliminar        | `DELETE /api/shelves/{id}`               | Toast "Estantería [nombre] eliminada"        |
-| Mover libro     | `POST /api/shelves/{src}/books/{id}/move`| Toast "[título] movido a [destino]"          |
 | Quitar libro    | `DELETE /api/shelves/{id}/books/{bookId}`| Toast "[título] quitado de la estantería"   |
 
 **Estados vacíos:**
