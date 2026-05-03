@@ -199,7 +199,6 @@
     border-color var(--transition),
     transform var(--transition-slow);
   position: relative;
-  overflow: hidden;
 }
 
 .shelf-book::before {
@@ -210,6 +209,7 @@
   background: var(--gradient-primary);
   opacity: 0;
   transition: opacity var(--transition-slow);
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
 }
 
 .shelf-book:hover {
