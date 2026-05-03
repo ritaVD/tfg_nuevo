@@ -1152,7 +1152,8 @@ Lista completa de usuarios.
     "avatar": null,
     "roles": ["ROLE_USER", "ROLE_ADMIN"],
     "isVerified": true,
-    "isAdmin": true
+    "isAdmin": true,
+    "isBanned": false
   }
 ]
 ```
@@ -1165,6 +1166,16 @@ Promover o degradar un usuario como administrador.
 **Body JSON:** `{ "isAdmin": true }`  
 **Response 200:** `{ "id": 2, "isAdmin": true, "roles": ["ROLE_USER", "ROLE_ADMIN"] }`  
 **Response 400:** intentando cambiar tu propio rol.
+
+---
+
+### `PATCH /api/admin/users/{id}/ban`
+Banear o desbanear un usuario.
+
+**Auth:** `ROLE_ADMIN`  
+**Body JSON:** `{ "isBanned": true }`  
+**Response 200:** `{ "id": 2, "isBanned": true }`  
+**Response 400:** intentando banear tu propia cuenta.
 
 ---
 

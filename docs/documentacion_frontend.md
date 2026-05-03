@@ -508,6 +508,7 @@ Comportamiento común a ambas:
 | `adminApi.stats()`          | GET    | `/admin/stats`                  | Totales de usuarios, clubs y posts   |
 | `adminApi.users()`          | GET    | `/admin/users`                  | Lista completa de usuarios           |
 | `adminApi.setRole(id, isAdmin)` | PATCH | `/admin/users/{id}/role`    | Da o quita rol de administrador      |
+| `adminApi.setBan(id, isBanned)` | PATCH | `/admin/users/{id}/ban`     | Banea o desbanea un usuario          |
 | `adminApi.deleteUser(id)`   | DELETE | `/admin/users/{id}`             | Elimina una cuenta de usuario        |
 | `adminApi.clubs()`          | GET    | `/admin/clubs`                  | Lista completa de clubs              |
 | `adminApi.deleteClub(id)`   | DELETE | `/admin/clubs/{id}`             | Elimina un club                      |
@@ -592,18 +593,39 @@ interface Props {
   meId: number | null      // ID del usuario autenticado
   onDelete?: (id: number) => void
   hideAuthor?: boolean     // Oculta la fila de autor (útil en perfil propio)
+  isAdmin?: boolean        // Permite eliminar cualquier post
 }
 ```
 
 **Funcionalidades:**
 - Muestra imagen del post (con `loading="lazy"`), avatar y nombre del autor, descripción y timestamp.
 - Botón de **like**: toggle con animación; deshabilitado si no hay sesión. Llama a `postsApi.like()`.
-- Botón de **eliminar** (solo visible si `meId === post.user.id`): abre confirmación nativa y llama a `onDelete`.
+- Botón de **eliminar** (visible para el autor del post y para administradores): abre `ConfirmDialog` antes de llamar a `onDelete`.
 - Sección de **comentarios** colapsable. Al expandir, carga los comentarios (`postsApi.comments()`).
 - Formulario de **nuevo comentario** (solo autenticados): textarea + botón de envío. Llama a `postsApi.addComment()`.
-- Eliminar comentario: disponible para el autor del post y para el autor del comentario y administrador.
+- Eliminar comentario: disponible para el autor del comentario y para administradores.
 
-### 7.6 Spinner
+### 7.6 ConfirmDialog
+
+**Archivo:** `components/ConfirmDialog.tsx`
+
+```typescript
+interface Props {
+  open: boolean
+  title: string
+  message: ReactNode
+  confirmLabel?: string   // por defecto "Confirmar"
+  cancelLabel?: string    // por defecto "Cancelar"
+  variant?: 'danger' | 'primary'  // por defecto "danger"
+  loading?: boolean
+  onConfirm: () => void
+  onCancel: () => void
+}
+```
+
+Modal de confirmación estilado que reemplaza los `confirm()` nativos del navegador. Usa las clases `.cdialog-backdrop` y `.cdialog` definidas en `components.css`. Cierra con Escape, clic en el fondo o botón "Cancelar". Usado en: eliminación de posts, reseñas, hilos, expulsión de miembros, y todas las acciones del panel de administración.
+
+### 7.7 Spinner
 
 **Archivo:** `components/Spinner.tsx`
 
@@ -777,7 +799,7 @@ Una vez añadido el libro a una estantería, el botón correspondiente cambia a 
 
 **Pestaña Miembros:**
 - Lista de todos los miembros con avatar, nombre y fecha de adhesión.
-- Los administradores ven un botón de expulsión en cada miembro (con confirmación nativa).
+- Los administradores ven un botón de expulsión en cada miembro (con modal `ConfirmDialog`).
 
 **Pestaña Solicitudes** (solo visible para administradores en clubs privados):
 - Lista de solicitudes pendientes de ingreso con botones "Aceptar" y "Rechazar".
@@ -864,7 +886,7 @@ Una vez añadido el libro a una estantería, el botón correspondiente cambia a 
 
 **Contenido (condicionado por la configuración de privacidad del usuario visitado):**
 - Avatar, nombre, bio, contadores de seguidores y siguiendo.
-- Publicaciones del usuario (siempre visibles si no es cuenta privada o si se le sigue).
+- Publicaciones: visibles si el perfil es público o si `followStatus === 'accepted'`. Si el perfil es privado y no se sigue, se muestra un icono de candado con el mensaje "Perfil privado" (si hay solicitud pendiente, indica que está esperando aprobación). El backend refuerza esta restricción: `/api/users/{id}/posts` devuelve 403 si el perfil es privado y el solicitante no es seguidor aceptado.
 - Estanterías (solo si `shelvesPublic = true`).
 - Clubs (solo si `clubsPublic = true`).
 
@@ -906,20 +928,21 @@ Una vez añadido el libro a una estantería, el botón correspondiente cambia a 
 
 **Control de acceso:** Verifica `user?.roles?.includes('ROLE_ADMIN')` al montar. Si no se cumple, redirige inmediatamente a `/` con `useNavigate`.
 
-**Pestañas:**
+**Tarjetas de estadísticas** (parte superior, fuera de pestañas): muestran totales de usuarios, clubs y publicaciones al cargar. Fuente: `GET /api/admin/stats`.
 
-1. **Estadísticas**: tres tarjetas con gradiente (violeta, cian, rosa) mostrando los totales actuales de usuarios, clubs y publicaciones. Fuente: `GET /api/admin/stats`.
+**Pestañas (3):**
 
-2. **Usuarios**: tabla con email, nombre visible, avatar y acciones.
+1. **Usuarios**: tabla con email, nombre visible, avatar y acciones.
    - Campo de búsqueda para filtrar por nombre o email (local, sin petición).
-   - "Dar admin" / "Quitar admin": confirmación nativa → `PATCH /api/admin/users/{id}/role`.
-   - "Eliminar": confirmación nativa → `DELETE /api/admin/users/{id}`.
+   - "Dar admin" / "Quitar admin": modal `ConfirmDialog` → `PATCH /api/admin/users/{id}/role`.
+   - "Banear" / "Desbanear": modal `ConfirmDialog` → `PATCH /api/admin/users/{id}/ban`.
+   - "Eliminar": modal `ConfirmDialog` → `DELETE /api/admin/users/{id}`.
 
-3. **Clubs**: tabla con nombre del club, descripción, número de miembros y propietario.
-   - "Eliminar": confirmación nativa → `DELETE /api/admin/clubs/{id}`.
+2. **Clubs**: tabla con nombre del club, descripción, número de miembros y propietario.
+   - "Eliminar": modal `ConfirmDialog` → `DELETE /api/admin/clubs/{id}`.
 
-4. **Publicaciones**: cuadrícula de todas las publicaciones con imagen en miniatura, autor y fecha.
-   - "Eliminar": confirmación nativa → `DELETE /api/admin/posts/{id}`.
+3. **Publicaciones**: cuadrícula de todas las publicaciones con imagen en miniatura, autor y fecha.
+   - "Eliminar": modal `ConfirmDialog` → `DELETE /api/admin/posts/{id}`.
 
 ---
 

@@ -567,7 +567,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 **Unirse / Abandonar:**
 - Unirse (público): `POST /api/clubs/{id}/join`.
 - Solicitar (privado): misma llamada, crea solicitud pendiente.
-- Abandonar: `confirm()` nativo → `DELETE /api/clubs/{id}/leave`.
+- Abandonar: modal `ConfirmDialog` → `DELETE /api/clubs/{id}/leave`.
 
 **Estados de error:**
 - Fallo al cargar clubs: alerta roja con mensaje.
@@ -606,7 +606,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 6. Admins pueden eliminar mensajes con confirmación inline.
 
 **Gestión de miembros (admins):**
-- Expulsar: `confirm()` → `DELETE /api/clubs/{id}/members/{userId}`.
+- Expulsar: modal `ConfirmDialog` → `DELETE /api/clubs/{id}/members/{userId}`.
 - Promover: `PUT /api/clubs/{id}/members/{userId}` con `{ role: 'admin' }`.
 
 **Estados de error:**
@@ -701,16 +701,22 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 
 **Control de acceso:** El componente verifica `user?.roles?.includes('ROLE_ADMIN')` al montarse. Si no se cumple, redirige inmediatamente a `/` con `useNavigate`. No hay `<PrivateRoute>` en la ruta porque la protección es por rol, no solo por autenticación.
 
-**Pestañas:**
+**Tarjetas de estadísticas** (parte superior, fuera de pestañas): tres tarjetas con gradiente mostrando totales de usuarios, clubs y publicaciones → `GET /api/admin/stats`.
 
-1. **Estadísticas**: tres tarjetas con gradiente (morado, cian, rosa) mostrando totales de usuarios, clubs y publicaciones → `GET /api/admin/stats`.
-2. **Usuarios**: tabla completa con búsqueda por nombre/email. Acciones: Dar/Quitar admin, Eliminar cuenta (ambas con `confirm()` nativo) → `PUT /api/admin/users/{id}/role`, `DELETE /api/admin/users/{id}`.
-3. **Clubs**: tabla con todos los clubs. Acción: Eliminar → `DELETE /api/admin/clubs/{id}`.
-4. **Publicaciones**: cuadrícula de todas las publicaciones. Acción: Eliminar → `DELETE /api/admin/posts/{id}`.
+**Pestañas (3):**
+
+1. **Usuarios**: tabla completa con búsqueda por nombre/email. Acciones con modal `ConfirmDialog`:
+   - Dar/Quitar admin → `PATCH /api/admin/users/{id}/role`.
+   - Banear/Desbanear → `PATCH /api/admin/users/{id}/ban`.
+   - Eliminar cuenta → `DELETE /api/admin/users/{id}`.
+
+2. **Clubs**: tabla con todos los clubs. Acción: Eliminar (modal `ConfirmDialog`) → `DELETE /api/admin/clubs/{id}`.
+
+3. **Publicaciones**: cuadrícula de todas las publicaciones. Acción: Eliminar (modal `ConfirmDialog`) → `DELETE /api/admin/posts/{id}`.
 
 **Estados de error:**
 - Fallo al cargar datos de cualquier panel: arrays vacíos, tablas o cuadrículas vacías.
-- Fallo al dar/quitar admin o eliminar: silencioso, la interfaz no cambia.
+- Fallo al ejecutar acción admin: silencioso, la interfaz no cambia.
 ![alt text](images/adminpage.png)
 ---
 
@@ -718,7 +724,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 
 **`Navbar`** — Barra de navegación global, sticky con `backdrop-filter: blur(20px)`. Los enlaces se filtran según el rol. En móvil (<768px): menú hamburguesa con `aria-expanded`, bloqueo de scroll del body y cierre al hacer clic fuera. Icono de notificaciones con polling cada 60 s → badge rojo con contador; clic abre dropdown con la lista.
 
-**`PostCard`** — Tarjeta de publicación con imagen (lazy loading), avatar, nombre, timestamp, contador de likes y botón de like → `POST /api/posts/{id}/like`. Si el usuario autenticado es el autor, muestra botón eliminar con `confirm()` → `DELETE /api/posts/{id}`.
+**`PostCard`** — Tarjeta de publicación con imagen (lazy loading), avatar, nombre, timestamp, contador de likes y botón de like → `POST /api/posts/{id}/like`. El botón de eliminar es visible para el autor del post y para administradores; abre un modal `ConfirmDialog` antes de llamar a `DELETE /api/posts/{id}`.
 
 **`Spinner`** — Carga inline. Acepta prop `size` (px). Renderiza `<span className="spinner" aria-label="Cargando" />` con animación `spin`. Presente en todos los botones de acción asíncrona.
 

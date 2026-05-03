@@ -1019,6 +1019,19 @@ Mismo proceso que las imágenes de posts: validar extensión, generar nombre ún
 | PATCH | `/api/reading-progress/{id}` | Actualizar progreso |
 | DELETE | `/api/reading-progress/{id}` | Dejar de seguir |
 
+### Administración (requiere ROLE_ADMIN)
+| Método | URL | Descripción |
+|--------|-----|-------------|
+| GET | `/api/admin/stats` | Totales globales (usuarios, clubs, posts) |
+| GET | `/api/admin/users` | Lista completa de usuarios |
+| PATCH | `/api/admin/users/{id}/role` | Dar/quitar rol de admin |
+| PATCH | `/api/admin/users/{id}/ban` | Banear/desbanear usuario |
+| DELETE | `/api/admin/users/{id}` | Eliminar cuenta de usuario |
+| GET | `/api/admin/clubs` | Lista completa de clubs |
+| DELETE | `/api/admin/clubs/{id}` | Eliminar cualquier club |
+| GET | `/api/admin/posts` | Últimas 100 publicaciones |
+| DELETE | `/api/admin/posts/{id}` | Eliminar cualquier publicación |
+
 ---
 
 ## Resumen para la defensa
@@ -1040,3 +1053,6 @@ Se buscan en Google Books API. Cuando un usuario añade un libro a su estanterí
 
 **¿Cómo funciona la privacidad en follows?**
 Si el usuario objetivo tiene `isPrivate=true`, el Follow se crea con `status='pending'`. Hasta que el destinatario acepte, el seguidor no aparece en el feed ni en la lista de seguidores activos.
+
+**¿Cómo se protegen los posts de perfiles privados?**
+El endpoint `GET /api/users/{id}/posts` comprueba si el perfil es privado. Si lo es, solo el propio usuario o sus seguidores con `status='accepted'` pueden ver los posts; el resto recibe HTTP 403. El frontend refleja esto mostrando un icono de candado con el mensaje "Perfil privado".
