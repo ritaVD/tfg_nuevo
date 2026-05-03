@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import {
   BookOpen, Search, Users, BookMarked, User,
   LogOut, LogIn, UserPlus, Bell,
@@ -204,6 +204,7 @@ const NAV_LINKS = (user: { roles?: string[] } | null) => [
 
 export default function Navbar() {
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
 
   const [scrolled, setScrolled]         = useState(false)
   const [mobileOpen, setMobileOpen]     = useState(false)
@@ -292,6 +293,7 @@ export default function Navbar() {
     setUserMenuOpen(false)
     setMobileOpen(false)
     await logout()
+    navigate('/')
   }
 
   const avatarSrc = user?.avatar

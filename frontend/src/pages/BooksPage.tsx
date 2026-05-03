@@ -193,6 +193,7 @@ export default function BooksPage() {
   const [total, setTotal] = useState<number | undefined>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fallback, setFallback] = useState(false)
   const [searched, setSearched] = useState(false)
 
   const [shelves, setShelves] = useState<Shelf[]>([])
@@ -210,6 +211,7 @@ export default function BooksPage() {
     if (!q.trim()) return
     setLoading(true)
     setError('')
+    setFallback(false)
     setSearched(true)
     try {
       const params: SearchParams = { page: p, limit: 12 }
@@ -220,6 +222,7 @@ export default function BooksPage() {
       setBooks(res.results)
       setPage(res.page)
       setTotal(res.total)
+      setFallback(res.fallback ?? false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al buscar libros')
     } finally {
@@ -299,6 +302,13 @@ export default function BooksPage() {
       )}
 
       {error && <div className="alert alert-danger" style={{ marginTop: '1rem' }}>{error}</div>}
+
+      {fallback && (
+        <div className="alert alert-warning" style={{ marginTop: '1rem' }}>
+          No se pueden cargar más libros en este momento. Vuelve a intentarlo más tarde.
+          {books.length > 0 && ' Mostrando resultados guardados localmente.'}
+        </div>
+      )}
 
       {loading && (
         <div className="loading-state"><Spinner size={32} /></div>

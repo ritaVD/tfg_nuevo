@@ -394,6 +394,8 @@ Comportamiento común a ambas:
 
 **Tipo `Book`:** `id`, `externalId`, `title`, `subtitle`, `authors[]`, `thumbnail`, `coverUrl`, `description`, `publisher`, `publishedDate`, `language`, `pageCount`, `categories[]`, `isbn10`, `isbn13`, `averageRating`, `ratingsCount`, `previewLink`, `infoLink`.
 
+**Tipo `BookSearchResult`:** `results: Book[]`, `page: number`, `total?: number`, `fallback?: boolean`. El campo `fallback` es `true` cuando Google Books no está disponible y el backend devuelve resultados de la base de datos local en su lugar.
+
 ### 6.4 Módulo de reseñas — `api/reviews.ts`
 
 | Función                                          | Método | Endpoint                          | Descripción                       |
@@ -549,11 +551,12 @@ Barra de navegación global, fija en la parte superior con `position: sticky` y 
 | `like`             | Alguien dio like a tu post              | Ninguna                              |
 | `comment`          | Alguien comentó tu post                 | Ninguna                              |
 
-**Menú de usuario:** Avatar circular (DiceBear Initials como fallback), nombre visible y botón de cerrar sesión. Se cierra al hacer clic fuera del área.
+**Menú de usuario:** Avatar circular, nombre visible y botón de cerrar sesión. Se cierra al hacer clic fuera del área.
 
 **Versión móvil (< 768px):** El menú principal se oculta y aparece un botón hamburguesa. Al activarse, el overlay ocupa toda la pantalla y el scroll del body se bloquea. El menú hamburguesa tiene `aria-expanded` para accesibilidad.
 
-**Función auxiliar `timeAgo(date)`:** Formatea la antigüedad de una notificación en español ("hace 5 min", "hace 2 h", "hace 3 d").
+**Función auxiliar `timeAgo(date)`:** Formatea la antigüedad de una notificación
+ ("hace 5 min", "hace 2 h", "hace 3 d").
 
 ### 7.2 Footer
 
@@ -599,7 +602,7 @@ interface Props {
 - Botón de **eliminar** (solo visible si `meId === post.user.id`): abre confirmación nativa y llama a `onDelete`.
 - Sección de **comentarios** colapsable. Al expandir, carga los comentarios (`postsApi.comments()`).
 - Formulario de **nuevo comentario** (solo autenticados): textarea + botón de envío. Llama a `postsApi.addComment()`.
-- Eliminar comentario: disponible para el autor del post y para el autor del comentario.
+- Eliminar comentario: disponible para el autor del post y para el autor del comentario y administrador.
 
 ### 7.6 Spinner
 
@@ -689,6 +692,7 @@ Renderiza `<span className="spinner" aria-label="Cargando" style={{ width, heigh
 2. `GET /api/books/search?q=...&page=1&limit=12` (o `?title=...` / `?author=...` según el modo).
 3. Los resultados se muestran con portada o con el icono `<BookOpen>` si no hay imagen disponible.
 4. Cambiar de página mantiene el término de búsqueda y el modo seleccionado.
+5. Si la respuesta incluye `fallback: true`, se muestra un aviso amarillo indicando que Google Books no está disponible y que los resultados provienen de la base de datos local.
 
 **ShelfDrawer — subcomponente interno:**  
 Panel lateral que se abre al pulsar "+ Estantería" sobre cualquier libro. Permite:
@@ -696,11 +700,12 @@ Panel lateral que se abre al pulsar "+ Estantería" sobre cualquier libro. Permi
 - Crear una nueva estantería sin cerrar el drawer (`POST /api/shelves`).
 - Marcar el libro como "Estoy leyendo" (`POST /api/reading-progress`).
 
-Una vez añadido el libro a una estantería, el botón correspondiente cambia a estado confirmado con `<CheckCircle>` verde y queda deshabilitado. El drawer se cierra al pulsar el botón X o haciendo clic en el overlay.
+Una vez añadido el libro a una estantería, el botón correspondiente cambia a estado confirmado con `<CheckCircle>` verde y queda deshabilitado. El drawer se cierra al pulsar el botón X o haciendo clic en el fuera.
 
 **Estados:**
 - Sin resultados: "No se encontraron resultados. Prueba con otros términos."
 - Error de red: alerta roja sobre la rejilla.
+- Google Books no disponible: aviso amarillo ("No se pueden cargar más libros en este momento. Vuelve a intentarlo más tarde.") con los resultados guardados localmente si los hay.
 - Usuario no autenticado: el botón "+ Estantería" no se renderiza.
 
 ---
@@ -723,6 +728,8 @@ Una vez añadido el libro a una estantería, el botón correspondiente cambia a 
 
 **Flujo de carga:** Al montar el componente se hacen tres peticiones en paralelo: `GET /api/books/{externalId}`, `GET /api/books/{externalId}/reviews` (incluye stats y la reseña propia del usuario).
 
+
+
 **Flujo de reseña:**
 1. Guardar: `POST /api/books/{externalId}/reviews` → la reseña aparece en la lista sin recargar.
 2. Editar: misma petición con los valores actualizados.
@@ -737,7 +744,7 @@ Una vez añadido el libro a una estantería, el botón correspondiente cambia a 
 **Propósito:** Explorar todos los clubs de lectura, crear uno nuevo y gestionar la adhesión.
 
 **Elementos:**
-- Botón "Nuevo club" (solo autenticados) que expande un formulario de creación.
+- Botón "Nuevo club" (solo autenticados) que expande un formulario para crear.
 - Campo de búsqueda para filtrar clubs por nombre en tiempo real (filtrado local, sin petición al servidor).
 - Rejilla de `<ClubCard>` con nombre, badge de visibilidad, badge de rol del usuario, descripción, número de miembros y portada del libro del mes.
 
@@ -813,6 +820,7 @@ Una vez añadido el libro a una estantería, el botón correspondiente cambia a 
 
 ---
 
+![estanterias](images/estanterias.png)
 ### 8.9 ProfilePage — `/profile` *(ruta protegida)*
 
 **Propósito:** Configuración de cuenta, gestión de publicaciones y administración de relaciones sociales.
@@ -1067,4 +1075,3 @@ El modo `strict` activa todas las comprobaciones de TypeScript (nullability, tip
 
 ---
 
-*Documento generado para el Trabajo de Fin de Grado — DAW*

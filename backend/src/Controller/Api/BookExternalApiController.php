@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Repository\BookRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,7 +13,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 #[Route('/api/books', name: 'api_books_')]
 class BookExternalApiController extends AbstractController
 {
-    public function __construct(private HttpClientInterface $httpClient) {}
+    public function __construct(
+        private HttpClientInterface $httpClient,
+        private BookRepository $bookRepository,
+    ) {}
 
     /**
      * Búsqueda avanzada (B): texto + filtros + paginación + orden + idioma + tipo + disponibilidad
@@ -96,19 +100,12 @@ class BookExternalApiController extends AbstractController
             ]);
 
             if ($resp->getStatusCode() >= 400) {
-                return $this->json([
-                    'error'   => 'Google Books error',
-                    'status'  => $resp->getStatusCode(),
-                    'details' => $resp->getContent(false),
-                ], 502);
+                return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit);
             }
 
             $raw = $resp->toArray(false);
         } catch (\Throwable $e) {
-            return $this->json([
-                'error'   => 'No se pudo contactar con Google Books',
-                'details' => $e->getMessage(),
-            ], 502);
+            return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit);
         }
 
         // --------- 4) Normalizar y filtrar por popularidad ----------
@@ -188,6 +185,41 @@ class BookExternalApiController extends AbstractController
             'limit'      => $limit,
             'totalItems' => $totalItems,
             'results'    => $results,
+        ]);
+    }
+
+    private function buildFallbackResponse(string $keyword, int $page, int $limit): JsonResponse
+    {
+        $books = $this->bookRepository->searchFallback($keyword, $limit);
+
+        $results = array_map(static function ($book) {
+            return [
+                'externalId'    => $book->getExternalId(),
+                'title'         => $book->getTitle(),
+                'subtitle'      => null,
+                'authors'       => $book->getAuthors() ?? [],
+                'publisher'     => $book->getPublisher(),
+                'publishedDate' => $book->getPublishedDate(),
+                'categories'    => $book->getCategories() ?? [],
+                'language'      => $book->getLanguage(),
+                'description'   => $book->getDescription(),
+                'pageCount'     => $book->getPageCount(),
+                'averageRating' => null,
+                'ratingsCount'  => null,
+                'thumbnail'     => $book->getCoverUrl(),
+                'previewLink'   => null,
+                'infoLink'      => null,
+                'isbn10'        => $book->getIsbn10(),
+                'isbn13'        => $book->getIsbn13(),
+            ];
+        }, $books);
+
+        return $this->json([
+            'page'       => $page,
+            'limit'      => $limit,
+            'totalItems' => count($results),
+            'results'    => $results,
+            'fallback'   => true,
         ]);
     }
 

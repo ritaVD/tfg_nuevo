@@ -539,8 +539,8 @@ export default function ClubDetailPage() {
     if (tab === 'requests') loadRequests()
   }, [tab, club])
 
-  const isAdmin = club?.userRole === 'admin'
-  const isMember = club?.userRole === 'admin' || club?.userRole === 'member'
+  const isAdmin = !!user && club?.userRole === 'admin'
+  const isMember = !!user && (club?.userRole === 'admin' || club?.userRole === 'member')
   const isGlobalAdmin = user?.roles?.includes('ROLE_ADMIN')
 
   async function handleJoin() {

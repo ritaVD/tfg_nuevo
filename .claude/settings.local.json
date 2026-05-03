@@ -40,7 +40,10 @@
       "Bash(docker compose *)",
       "Bash(netstat -ano)",
       "PowerShell(Get-Service *)",
-      "PowerShell(Get-Process *)"
+      "PowerShell(Get-Process *)",
+      "PowerShell(\\(Get-Content \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\README_BACKEND.md\" | Measure-Object -Line\\).Lines)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\frontend\" -Recurse -Include \"*.js\", \"*.jsx\", \"*.ts\", \"*.tsx\")",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

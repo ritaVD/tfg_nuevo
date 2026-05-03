@@ -26,6 +26,7 @@ export interface BookSearchResult {
   results: Book[]
   page: number
   total?: number
+  fallback?: boolean
 }
 
 export interface SearchParams {

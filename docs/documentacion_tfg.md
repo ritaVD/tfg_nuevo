@@ -20,7 +20,7 @@
 La aplicación sigue el patrón **MVC (Modelo-Vista-Controlador)** distribuido en dos capas diferenciadas:
 
 - **Modelo**: entidades Doctrine ORM mapeadas a MariaDB 10.11. Incluye 16 entidades (User, Book, Shelf, ShelfBook, ReadingProgress, Club, ClubMember, ClubJoinRequest, ClubChat, ClubChatMessage, BookReview, Post, PostLike, PostComment, Follow, Notification) y sus repositorios.
-- **Vista**: aplicación SPA en React 18 + TypeScript 5, compilada con Vite 5. El HTML resultante es servido como archivo estático y el enrutamiento lo gestiona React Router 6 en el cliente.
+- **Vista**: aplicación SPA en React 18 + TypeScript 5, compilada con Vite 5.
 - **Controlador**: 12 controladores PHP en Symfony 7.4 bajo `backend/src/Controller/Api/`, que exponen endpoints REST bajo el prefijo `/api`.
 
 La infraestructura completa se levanta con **Docker Compose**, con cuatro servicios:
@@ -51,7 +51,7 @@ La autenticación es **basada en sesión**: Symfony genera una cookie `PHPSESSID
 La plataforma distingue tres niveles de acceso:
 
 ### Usuario anónimo (no autenticado)
-Puede navegar por la página de inicio, buscar libros y explorar la lista de clubs. No puede interactuar con ningún recurso (no puede crear clubs, añadir libros a estanterías, ni ver el feed social).
+Puede navegar por la página de inicio, buscar libros y explorar la lista de clubs. No puede interactuar con ninguno (no puede crear clubs, añadir libros a estanterías, ni ver el feed social).
 
 ### Usuario registrado
 Accede a la funcionalidad completa de la plataforma:
@@ -83,13 +83,18 @@ La base de datos MariaDB 10.11 contiene **16 tablas** gestionadas con Doctrine O
 
 **User** — Cuenta de usuario  
 `id`, `email` (único), `password` (bcrypt), `displayName`, `bio`, `avatar`, `isAdmin`, `isPrivate`, `shelvesPublic`, `clubsPublic`, `createdAt`
+!(admin)[images/admin1.png]
+!(admin)[images/admin2.png]
+!(admin)[images/admin3.png]
 
 **Book** — Libro importado desde Google Books  
 `id`, `externalId` (Google Books ID, único), `title`, `authors` (JSON), `description`, `coverUrl`, `thumbnail`, `publisher`, `publishedDate`, `pageCount`, `isbn`, `language`, `googleBooksUrl`
+![books](images/books1.png)
 
 **BookReview** — Reseña de un libro  
 `id`, `rating` (1-5), `status` (want_to_read/reading/read), `body`, `createdAt`  
 Relaciones: `ManyToOne(User)`, `ManyToOne(Book)`
+![booksreview](images/booksreview.png)
 
 **Shelf** — Estantería personal  
 `id`, `name`, `createdAt`  
@@ -102,6 +107,8 @@ Relaciones: `ManyToOne(Shelf)`, `ManyToOne(Book)`
 **ReadingProgress** — Seguimiento de lectura activo  
 `id`, `mode` (pages/percent), `currentPage`, `totalPages`, `percent`, `startedAt`, `updatedAt`  
 Relaciones: `ManyToOne(User)`, `ManyToOne(Book)`
+
+![alt text](images/shelves.png)
 
 **Club** — Club de lectura  
 `id`, `name`, `description`, `visibility` (public/private), `createdAt`  
@@ -157,7 +164,10 @@ Club >── Book (currentBook)
 Club ──< ClubJoinRequest >── User
 User ──< Notification
 ```
-
+![alt text](images/modelo1.png)
+![alt text](images/modelo2.png)
+![alt text](images/modelo3.png)
+![alt text](images/modelo4.png)
 ---
 
 ## 4. Mapa de navegación
@@ -214,7 +224,7 @@ Cada módulo de la API es un controlador independiente bajo `src/Controller/Api/
 | AdminApiController        | `/api/admin`      | Estadísticas y gestión de plataforma        |
 
 **Subida de archivos**  
-Los avatars y las imágenes de posts se reciben como `multipart/form-data`, se validan (tipo MIME, tamaño máximo 20 MB configurado en Nginx), se renombran con `uniqid()` y se guardan en `/var/uploads/`. La URL resultante se almacena en la entidad correspondiente.
+Los avatars y las imágenes de posts se reciben como `multipart/form-data`, se validan (tipo MIME, tamaño máximo 20 MB configurado en Nginx), se renombran con `uniqid()` y se guardan en `/var/uploads/`. La URL resultante se almacena en la entidad.
 
 ### 5.2 Frontend — React 18 + TypeScript
 
@@ -313,7 +323,7 @@ location / {
 
 ### Optimizaciones de producción del backend
 
-El `Dockerfile` del backend configura OPcache con `opcache.validate_timestamps=0` para no revalidar archivos en cada petición, y ejecuta `cache:warmup` durante la construcción para pre-compilar contenedores Symfony. El servidor PHP-FPM expone el puerto 9000 exclusivamente en la red interna Docker.
+El `Dockerfile` del backend configura con `opcache.validate_timestamps=0` para no revalidar archivos en cada petición, y ejecuta `cache:warmup` durante la construcción para pre-compilar contenedores Symfony. El servidor PHP-FPM expone el puerto 9000 exclusivamente en la red interna Docker.
 
 ---
 
@@ -396,7 +406,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 **Estados de error:**
 - Si `postsApi.feed()` falla, el error se ignora silenciosamente (`catch(() => {})`). El feed simplemente no aparece para no romper la página principal ante un error secundario.
 - Si la sesión es inválida (401), `AuthContext` ha detectado previamente que `user` es `null` y el feed no se solicita.
-
+!(homePage)[images/HomePage.png]
 ---
 
 ### 8.3 Página de inicio de sesión — `LoginPage` (`/login`)
@@ -414,7 +424,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Credenciales incorrectas (HTTP 401): alerta roja con el mensaje del servidor o "Credenciales incorrectas" por defecto.
 - Error de red: el mismo bloque de alerta muestra el mensaje de excepción.
 - Los campos tienen `autocomplete="email"` y `autocomplete="current-password"` para autocompletado del navegador.
-
+!(homePage)[images/LoginPage.png]
 ---
 
 ### 8.4 Página de registro — `RegisterPage` (`/register`)
@@ -433,7 +443,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Email ya registrado (HTTP 409): mensaje del servidor en alerta roja.
 - Error de red: "Error al crear la cuenta".
 - Durante el proceso: botón muestra `<Spinner>` y está deshabilitado (evita envíos duplicados).
-
+![register](images/register.png)
 ---
 
 ### 8.5 Página de búsqueda de libros — `BooksPage` (`/books`)
@@ -465,7 +475,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Fallo en la búsqueda: alerta roja con el mensaje de error.
 - Fallo al añadir a estantería: mensaje de error inline compacto dentro del ShelfDrawer.
 - Usuario no autenticado: el botón "+ Estantería" no se renderiza.
-
+![books](images/books1.png.png)
 ---
 
 ### 8.6 Página de detalle de libro — `BookDetailPage` (`/books/:externalId`)
@@ -496,7 +506,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Libro no encontrado (404): "No se pudo cargar el libro" con enlace "Volver a libros".
 - Error al publicar reseña: mensaje inline rojo bajo el formulario.
 - Error al borrar: fallo silencioso, el ítem no desaparece.
-
+![booksDetal](images/bookDetail.png)
 ---
 
 ### 8.7 Página de estanterías — `ShelvesPage` (`/shelves`) *(ruta protegida)*
@@ -528,7 +538,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Fallo al guardar progreso: silencioso, el estado visual no cambia.
 - Estantería vacía: estado vacío con botón "Buscar libros".
 - Sin estanterías: instrucción de crear la primera desde el formulario lateral.
-
+![alt text](images/shelves.png)
 ---
 
 ### 8.8 Página de clubs de lectura — `ClubsPage` (`/clubs`)
@@ -566,7 +576,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Fallo al unirse/abandonar: mensaje compacto dentro de la tarjeta.
 - Sin resultados de búsqueda: "No hay clubs con ese nombre".
 - Sin clubs: "Aún no hay clubs. ¡Sé el primero en crear uno!".
-
+![alt text](images/clubs.png)
 ---
 
 ### 8.9 Página de detalle de club — `ClubDetailPage` (`/clubs/:id`)
@@ -605,7 +615,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Fallo al enviar mensaje: error inline en el área de composición.
 - Fallo al cargar mensajes: chat vacío.
 - Fallo al aceptar/rechazar solicitud: silencioso, la solicitud permanece.
-
+![alt text](images/clubDetail.png)
 ---
 
 ### 8.10 Perfil propio — `ProfilePage` (`/profile`) *(ruta protegida)*
@@ -640,7 +650,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Fallo al cambiar contraseña: alerta roja con mensaje del servidor.
 - Fallo al cambiar privacidad: el toggle se revierte automáticamente al valor anterior.
 - Fallo al crear publicación: texto en rojo bajo el formulario.
-
+![alt text](images/admin1.png)
 ---
 
 ### 8.11 Perfil público — `PublicProfilePage` (`/users/:id`)
@@ -683,7 +693,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 - Sin resultados: "Nadie coincide con [término]. Prueba con otro nombre".
 - Fallo en la búsqueda: lista vacía sin mensaje explícito.
 - Fallo al seguir/dejar de seguir: silencioso, botón vuelve al estado anterior.
-
+![alt text](images/busquedaLectores.png)
 ---
 
 ### 8.13 Panel de administración — `AdminPage` (`/admin`)
@@ -702,7 +712,7 @@ Todas las llamadas HTTP pasan por `apiFetch<T>(endpoint, method, body)` en `api/
 **Estados de error:**
 - Fallo al cargar datos de cualquier panel: arrays vacíos, tablas o cuadrículas vacías.
 - Fallo al dar/quitar admin o eliminar: silencioso, la interfaz no cambia.
-
+![alt text](images/adminpage.png)
 ---
 
 ### 8.14 Componentes reutilizables
@@ -751,4 +761,3 @@ Ambas fuentes se cargan desde Google Fonts con `font-display: swap`.
 
 ---
 
-*Documento generado para el Trabajo de Fin de Grado — DAW*

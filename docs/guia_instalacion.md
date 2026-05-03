@@ -374,4 +374,4 @@ docker compose run --rm migrate # Aplica migraciones
 
 ---
 
-*Guía generada para el Trabajo de Fin de Grado — DAW*
+
