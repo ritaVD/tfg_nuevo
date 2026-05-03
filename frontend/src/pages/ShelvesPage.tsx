@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { shelvesApi, type Shelf, type ShelfBook } from '../api/shelves'
 import { readingProgressApi, type ReadingProgressItem } from '../api/readingProgress'
