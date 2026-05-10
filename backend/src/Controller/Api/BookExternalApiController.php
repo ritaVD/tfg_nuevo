@@ -115,44 +115,11 @@ class BookExternalApiController extends AbstractController
             return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit);
         }
 
-        // --------- 4) Normalizar y filtrar por popularidad ----------
+        // --------- 4) Normalizar ----------
         $items      = $raw['items'] ?? [];
         $totalItems = (int) ($raw['totalItems'] ?? 0);
 
-        // Step 1 — keep only items that have a cover image.
-        // Books without a thumbnail are almost always obscure/incomplete entries.
-        $items = array_values(array_filter($items, static function (array $item): bool {
-            $links = $item['volumeInfo']['imageLinks'] ?? [];
-            return !empty($links['thumbnail']) || !empty($links['smallThumbnail']);
-        }));
-
-        // Step 2 — separate rated books from unrated ones, then sort each group.
-        $rated   = [];
-        $unrated = [];
-        foreach ($items as $item) {
-            if (!empty($item['volumeInfo']['ratingsCount'])) {
-                $rated[] = $item;
-            } else {
-                $unrated[] = $item;
-            }
-        }
-
-        // Rated: sort by score = ratingsCount × averageRating (desc)
-        usort($rated, static function (array $a, array $b): int {
-            $viA   = $a['volumeInfo'] ?? [];
-            $viB   = $b['volumeInfo'] ?? [];
-            $scoreA = (int)($viA['ratingsCount'] ?? 0) * (float)($viA['averageRating'] ?? 0);
-            $scoreB = (int)($viB['ratingsCount'] ?? 0) * (float)($viB['averageRating'] ?? 0);
-            return $scoreB <=> $scoreA;
-        });
-
-        // Unrated: sort by page count desc (longer = more likely a real book)
-        usort($unrated, static function (array $a, array $b): int {
-            return ($b['volumeInfo']['pageCount'] ?? 0) <=> ($a['volumeInfo']['pageCount'] ?? 0);
-        });
-
-        // Step 3 — rated books always come first; slice to requested limit
-        $items = array_slice(array_merge($rated, $unrated), 0, $limit);
+        $items = array_slice($items, 0, $limit);
 
         $results = array_map(static function ($item) {
             $vi       = $item['volumeInfo'] ?? [];
@@ -188,10 +155,10 @@ class BookExternalApiController extends AbstractController
         }, $items);
 
         return $this->json([
-            'page'       => $page,
-            'limit'      => $limit,
-            'totalItems' => $totalItems,
-            'results'    => $results,
+            'page'    => $page,
+            'limit'   => $limit,
+            'total'   => $totalItems,
+            'results' => $results,
         ]);
     }
 
