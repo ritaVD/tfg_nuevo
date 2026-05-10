@@ -5,7 +5,9 @@
       "Bash(Select-Object FullName)",
       "Bash(xargs ls)",
       "Bash(xargs grep -l \"upload\\\\|avatar\\\\|image\\\\|cover\" -i)",
-      "Bash(xargs ls -la)"
+      "Bash(xargs ls -la)",
+      "Bash(xargs cat)",
+      "Bash(xargs grep -l \"s3\\\\|cloudinary\\\\|flysystem\\\\|storage\\\\|cloud\" -i)"
     ]
   }
 }

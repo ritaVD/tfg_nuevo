@@ -194,16 +194,21 @@ export default function BooksPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fallback, setFallback] = useState(false)
+  const [fallbackReason, setFallbackReason] = useState<'rate_limited' | 'unavailable' | null>(null)
   const [searched, setSearched] = useState(false)
 
   const [shelves, setShelves] = useState<Shelf[]>([])
   const [drawerBook, setDrawerBook] = useState<Book | null>(null)
+  const [retrying, setRetrying] = useState(false)
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (user) {
       shelvesApi.list().then(setShelves).catch(() => {})
     }
   }, [user])
+
+  useEffect(() => () => { if (retryTimerRef.current) clearTimeout(retryTimerRef.current) }, [])
 
   async function doSearch(p = 1, qOverride?: string, modeOverride?: 'q' | 'title' | 'author') {
     const q = qOverride ?? query
@@ -212,7 +217,10 @@ export default function BooksPage() {
     setLoading(true)
     setError('')
     setFallback(false)
+    setFallbackReason(null)
+    setRetrying(false)
     setSearched(true)
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
     try {
       const params: SearchParams = { page: p, limit: 12 }
       if (mode === 'q') params.q = q
@@ -223,8 +231,14 @@ export default function BooksPage() {
       setPage(res.page)
       setTotal(res.total)
       setFallback(res.fallback ?? false)
+      setFallbackReason(res.fallbackReason ?? null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al buscar libros')
+      setRetrying(true)
+      retryTimerRef.current = setTimeout(() => {
+        setRetrying(false)
+        doSearch(p, qOverride, modeOverride)
+      }, 2000)
     } finally {
       setLoading(false)
     }
@@ -301,11 +315,21 @@ export default function BooksPage() {
         </div>
       )}
 
-      {error && <div className="alert alert-danger" style={{ marginTop: '1rem' }}>{error}</div>}
+      {error && (
+        <div className="alert alert-danger" style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <span style={{ flex: 1 }}>{error}</span>
+          {retrying
+            ? <span style={{ fontSize: '0.82rem', opacity: 0.8 }}><Spinner size={13} /> Reintentando…</span>
+            : <button className="btn btn-secondary btn-sm" onClick={() => doSearch(page)}>Reintentar</button>
+          }
+        </div>
+      )}
 
       {fallback && (
         <div className="alert alert-warning" style={{ marginTop: '1rem' }}>
-          No se pueden cargar más libros en este momento. Vuelve a intentarlo más tarde.
+          {fallbackReason === 'rate_limited'
+            ? 'Se ha superado el límite de peticiones a Google Books. Espera unos segundos y vuelve a intentarlo.'
+            : 'Google Books no está disponible en este momento. Vuelve a intentarlo más tarde.'}
           {books.length > 0 && ' Mostrando resultados guardados localmente.'}
         </div>
       )}

@@ -79,12 +79,14 @@ class BookExternalApiController extends AbstractController
         // --------- 3) Llamada a Google Books ----------
         $apiKey = $_ENV['GOOGLE_BOOKS_API_KEY'] ?? null;
 
-        // Always fetch the maximum allowed (40) so we have enough candidates
-        // to filter and re-rank by popularity before returning only $limit items.
+        // Fetch up to 2× the requested limit (capped at 40) so the re-ranker has
+        // enough candidates without burning the full daily quota on every search.
+        $fetchCount = min($limit * 2, 40);
+
         $query = [
             'q'          => $googleQ,
             'startIndex' => $startIndex,
-            'maxResults' => 40,
+            'maxResults' => $fetchCount,
             'orderBy'    => $orderBy,
             'printType'  => $printType,
         ];
@@ -93,19 +95,39 @@ class BookExternalApiController extends AbstractController
         if ($filter !== '') $query['filter'] = $filter;
         if ($apiKey)        $query['key'] = $apiKey;
 
-        try {
-            $resp = $this->httpClient->request('GET', 'https://www.googleapis.com/books/v1/volumes', [
-                'query'   => $query,
-                'headers' => ['Accept' => 'application/json'],
-            ]);
+        $requestOptions = [
+            'query'   => $query,
+            'headers' => ['Accept' => 'application/json'],
+            'timeout' => 8,
+        ];
 
-            if ($resp->getStatusCode() >= 400) {
-                return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit);
+        $raw = null;
+        $attempts = 0;
+        $fallbackReason = null;
+
+        while ($attempts < 2 && $raw === null) {
+            $attempts++;
+            try {
+                $resp = $this->httpClient->request('GET', 'https://www.googleapis.com/books/v1/volumes', $requestOptions);
+                $status = $resp->getStatusCode();
+
+                if ($status === 429) {
+                    $fallbackReason = 'rate_limited';
+                    break;
+                }
+                if ($status >= 400) {
+                    if ($attempts < 2) { usleep(600_000); continue; }
+                    break;
+                }
+
+                $raw = $resp->toArray(false);
+            } catch (\Throwable) {
+                if ($attempts < 2) { usleep(600_000); }
             }
+        }
 
-            $raw = $resp->toArray(false);
-        } catch (\Throwable $e) {
-            return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit);
+        if ($raw === null) {
+            return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit, $fallbackReason ?? 'unavailable');
         }
 
         // --------- 4) Normalizar y filtrar por popularidad ----------
@@ -188,7 +210,7 @@ class BookExternalApiController extends AbstractController
         ]);
     }
 
-    private function buildFallbackResponse(string $keyword, int $page, int $limit): JsonResponse
+    private function buildFallbackResponse(string $keyword, int $page, int $limit, string $reason = 'unavailable'): JsonResponse
     {
         $books = $this->bookRepository->searchFallback($keyword, $limit);
 
@@ -220,6 +242,7 @@ class BookExternalApiController extends AbstractController
             'totalItems' => count($results),
             'results'    => $results,
             'fallback'   => true,
+            'fallbackReason' => $reason,
         ]);
     }
 

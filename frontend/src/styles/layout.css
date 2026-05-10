@@ -670,29 +670,20 @@
    RESPONSIVE — layout
    ============================================================ */
 
-@media (max-width: 900px) and (min-width: 769px) {
-  .footer__inner {
-    grid-template-columns: 1.8fr 1fr;
-    gap: 2rem;
-  }
-}
-
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .navbar__inner {
     gap: 0.75rem;
   }
 
-  /* Hide desktop nav */
+  /* Hide desktop nav, show hamburger */
   .navbar__links {
     display: none;
   }
 
-  /* Hide desktop user btn + notif on very small screens */
   .navbar__user-btn .navbar__user-name {
     display: none;
   }
 
-  /* Show hamburger */
   .navbar__hamburger,
   .navbar__mobile-menu,
   .navbar__mobile-overlay {
@@ -704,8 +695,14 @@
   }
 
   .footer__inner {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.8fr 1fr;
     gap: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer__inner {
+    grid-template-columns: 1fr 1fr;
     padding-bottom: 1.5rem;
   }
 

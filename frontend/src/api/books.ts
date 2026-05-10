@@ -27,6 +27,7 @@ export interface BookSearchResult {
   page: number
   total?: number
   fallback?: boolean
+  fallbackReason?: 'rate_limited' | 'unavailable'
 }
 
 export interface SearchParams {
