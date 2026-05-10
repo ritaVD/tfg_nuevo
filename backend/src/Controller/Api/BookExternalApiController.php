@@ -194,7 +194,7 @@ class BookExternalApiController extends AbstractController
                 'pageCount'     => $vi['pageCount'] ?? null,
                 'averageRating' => $vi['averageRating'] ?? null,
                 'ratingsCount'  => $vi['ratingsCount'] ?? null,
-                'thumbnail'     => $links['thumbnail'] ?? ($links['smallThumbnail'] ?? null),
+                'thumbnail'     => self::https($links['thumbnail'] ?? ($links['smallThumbnail'] ?? null)),
                 'previewLink'   => $vi['previewLink'] ?? null,
                 'infoLink'      => $vi['infoLink'] ?? null,
                 'isbn10'        => $isbn10,
@@ -228,7 +228,7 @@ class BookExternalApiController extends AbstractController
                 'pageCount'     => $book->getPageCount(),
                 'averageRating' => null,
                 'ratingsCount'  => null,
-                'thumbnail'     => $book->getCoverUrl(),
+                'thumbnail'     => self::https($book->getCoverUrl()),
                 'previewLink'   => null,
                 'infoLink'      => null,
                 'isbn10'        => $book->getIsbn10(),
@@ -314,12 +314,18 @@ class BookExternalApiController extends AbstractController
             'pageCount'     => $vi['pageCount'] ?? null,
             'averageRating' => $vi['averageRating'] ?? null,
             'ratingsCount'  => $vi['ratingsCount'] ?? null,
-            'thumbnail'     => $links['thumbnail'] ?? ($links['smallThumbnail'] ?? null),
+            'thumbnail'     => self::https($links['thumbnail'] ?? ($links['smallThumbnail'] ?? null)),
             'previewLink'   => $vi['previewLink'] ?? null,
             'infoLink'      => $vi['infoLink'] ?? null,
             'isbn10'        => $isbn10,
             'isbn13'        => $isbn13,
         ]);
+    }
+
+    private static function https(?string $url): ?string
+    {
+        if ($url === null) return null;
+        return str_starts_with($url, 'http://') ? 'https://' . substr($url, 7) : $url;
     }
 
 }

@@ -187,7 +187,6 @@ export default function BooksPage() {
   const { user } = useAuth()
 
   const [query, setQuery] = useState('')
-  const [searchMode, setSearchMode] = useState<'q' | 'title' | 'author'>('q')
   const [books, setBooks] = useState<Book[]>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState<number | undefined>()
@@ -210,9 +209,8 @@ export default function BooksPage() {
 
   useEffect(() => () => { if (retryTimerRef.current) clearTimeout(retryTimerRef.current) }, [])
 
-  async function doSearch(p = 1, qOverride?: string, modeOverride?: 'q' | 'title' | 'author') {
+  async function doSearch(p = 1, qOverride?: string) {
     const q = qOverride ?? query
-    const mode = modeOverride ?? searchMode
     if (!q.trim()) return
     setLoading(true)
     setError('')
@@ -222,11 +220,7 @@ export default function BooksPage() {
     setSearched(true)
     if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
     try {
-      const params: SearchParams = { page: p, limit: 12 }
-      if (mode === 'q') params.q = q
-      else if (mode === 'title') params.title = q
-      else params.author = q
-      const res = await booksApi.search(params)
+      const res = await booksApi.search({ q, page: p, limit: 12 })
       setBooks(res.results)
       setPage(res.page)
       setTotal(res.total)
@@ -237,7 +231,7 @@ export default function BooksPage() {
       setRetrying(true)
       retryTimerRef.current = setTimeout(() => {
         setRetrying(false)
-        doSearch(p, qOverride, modeOverride)
+        doSearch(p, qOverride)
       }, 2000)
     } finally {
       setLoading(false)
@@ -251,8 +245,7 @@ export default function BooksPage() {
 
   function handleSuggestion(s: string) {
     setQuery(s)
-    setSearchMode('q')
-    doSearch(1, s, 'q')
+    doSearch(1, s)
   }
 
   const totalPages = total != null ? Math.ceil(total / 12) : undefined
@@ -275,16 +268,6 @@ export default function BooksPage() {
     <div className="page-content">
 
       <form onSubmit={handleSubmit} className="search-bar">
-        <select
-          className="form-control"
-          style={{ width: 'auto', flex: '0 0 auto' }}
-          value={searchMode}
-          onChange={e => setSearchMode(e.target.value as 'q' | 'title' | 'author')}
-        >
-          <option value="q">Texto libre</option>
-          <option value="title">Por título</option>
-          <option value="author">Por autor</option>
-        </select>
         <input
           type="text"
           className="form-control"
@@ -416,6 +399,7 @@ export default function BooksPage() {
             >
               Siguiente →
             </button>
+
           </div>
         </>
       )}

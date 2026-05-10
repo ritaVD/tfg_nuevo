@@ -435,7 +435,8 @@ class ShelfApiController extends AbstractController
         $book->setDescription($vi['description'] ?? null);
         $book->setPageCount(isset($vi['pageCount']) ? (int) $vi['pageCount'] : null);
         $book->setCategories($vi['categories'] ?? []);
-        $book->setCoverUrl($links['thumbnail'] ?? ($links['smallThumbnail'] ?? null));
+        $url = $links['thumbnail'] ?? ($links['smallThumbnail'] ?? null);
+        $book->setCoverUrl($url !== null && str_starts_with($url, 'http://') ? 'https://' . substr($url, 7) : $url);
         $book->setIsbn10($isbn10);
         $book->setIsbn13($isbn13);
 

@@ -187,7 +187,8 @@ class BookReviewApiController extends AbstractController
         $book->setPageCount($vi['pageCount'] ?? null);
         $book->setCategories($vi['categories'] ?? []);
         $book->setDescription($vi['description'] ?? null);
-        $book->setCoverUrl($links['thumbnail'] ?? ($links['smallThumbnail'] ?? null));
+        $url = $links['thumbnail'] ?? ($links['smallThumbnail'] ?? null);
+        $book->setCoverUrl($url !== null && str_starts_with($url, 'http://') ? 'https://' . substr($url, 7) : $url);
         $book->setIsbn10($isbn10);
         $book->setIsbn13($isbn13);
 
