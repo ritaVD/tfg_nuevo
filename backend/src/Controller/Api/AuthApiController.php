@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 #[Route('/api/auth', name: 'api_auth_')]
 class AuthApiController extends AbstractController
@@ -98,8 +99,9 @@ class AuthApiController extends AbstractController
     // POST /api/auth/logout  →  cerrar sesión
     // -------------------------------------------------------
     #[Route('/logout', name: 'logout', methods: ['POST'])]
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request, TokenStorageInterface $tokenStorage): JsonResponse
     {
+        $tokenStorage->setToken(null);
         $request->getSession()->invalidate();
 
         return $this->json(['status' => 'logged_out']);

@@ -50,6 +50,7 @@ class ClubMemberRepository extends ServiceEntityRepository
 
         $rows = $this->createQueryBuilder('m')
             ->select('IDENTITY(m.club) AS clubId, COUNT(m.id) AS cnt')
+            ->join('m.user', 'u')
             ->where('m.club IN (:clubs)')
             ->setParameter('clubs', $clubs)
             ->groupBy('m.club')
@@ -100,6 +101,7 @@ class ClubMemberRepository extends ServiceEntityRepository
     {
         return (int) $this->createQueryBuilder('m')
             ->select('COUNT(m.id)')
+            ->join('m.user', 'u')
             ->where('m.club = :club')
             ->setParameter('club', $club)
             ->getQuery()

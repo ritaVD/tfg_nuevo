@@ -359,6 +359,7 @@ class ClubApiController extends AbstractController
             'joinedAt' => $m->getJoinedAt()?->format(\DateTimeInterface::ATOM),
             'user'     => [
                 'id'          => $m->getUser()->getId(),
+                'email'       => $m->getUser()->getEmail(),
                 'displayName' => $m->getUser()->getDisplayName(),
                 'avatar'      => $m->getUser()->getAvatar(),
             ],

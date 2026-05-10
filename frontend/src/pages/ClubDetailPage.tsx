@@ -499,6 +499,7 @@ export default function ClubDetailPage() {
   const [members, setMembers] = useState<ClubMember[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
   const [membersLoaded, setMembersLoaded] = useState(false)
+  const [membersError, setMembersError] = useState('')
 
   const [requests, setRequests] = useState<JoinRequest[]>([])
   const [requestsLoading, setRequestsLoading] = useState(false)
@@ -526,8 +527,9 @@ export default function ClubDetailPage() {
   async function loadMembers() {
     if (membersLoaded) return
     setMembersLoading(true)
+    setMembersError('')
     try { setMembers(await clubsApi.members(clubId)); setMembersLoaded(true) }
-    catch { /* ignore */ }
+    catch (err) { setMembersError(err instanceof Error ? err.message : 'Error al cargar miembros') }
     finally { setMembersLoading(false) }
   }
 
@@ -689,6 +691,18 @@ export default function ClubDetailPage() {
 
         {/* Main */}
         <div className="ch-main">
+          {/* Private club wall for non-members */}
+          {club.visibility === 'private' && !isMember && !isGlobalAdmin ? (
+            <div className="empty-state" style={{ padding: '3rem 1.5rem' }}>
+              <div className="empty-state__icon"><Lock size={48} /></div>
+              <p className="empty-state__title">Este club es privado</p>
+              <p className="empty-state__desc">
+                Solo los miembros pueden ver los debates y la lista de integrantes.
+                {!user && ' Inicia sesión para solicitar el acceso.'}
+              </p>
+            </div>
+          ) : (
+            <>
           {/* Tabs */}
           <div className="ch-tabs">
             {(['chats', 'members'] as Tab[]).map(t => (
@@ -718,13 +732,7 @@ export default function ClubDetailPage() {
           </div>
 
           {/* Chats */}
-          {tab === 'chats' && club.visibility === 'private' && !isMember && !isGlobalAdmin && (
-            <div className="empty-state">
-              <div className="empty-state__icon"><Lock size={40} /></div>
-              <p className="empty-state__title">Hilos solo disponibles para miembros del club</p>
-            </div>
-          )}
-          {tab === 'chats' && (club.visibility !== 'private' || isMember || isGlobalAdmin) && (
+          {tab === 'chats' && (
             <div>
               {(isAdmin || isGlobalAdmin) && (
                 <div style={{ marginBottom: '1rem' }}>
@@ -784,17 +792,12 @@ export default function ClubDetailPage() {
           )}
 
           {/* Members */}
-          {tab === 'members' && club.visibility === 'private' && !isMember && !isGlobalAdmin && (
-            <div className="empty-state">
-              <div className="empty-state__icon"><Lock size={40} /></div>
-              <p className="empty-state__title">Club privado</p>
-              <p className="empty-state__desc">Los miembros solo son visibles para los integrantes del club</p>
-            </div>
-          )}
-          {tab === 'members' && (club.visibility !== 'private' || isMember || isGlobalAdmin) && (
+          {tab === 'members' && (
             <div>
               {membersLoading ? (
                 <div className="loading-state"><Spinner size={28} /></div>
+              ) : membersError ? (
+                <div className="alert alert-danger">{membersError}</div>
               ) : members.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-state__icon"><Users size={40} /></div>
@@ -867,6 +870,8 @@ export default function ClubDetailPage() {
                 </div>
               )}
             </div>
+          )}
+            </>
           )}
         </div>
 

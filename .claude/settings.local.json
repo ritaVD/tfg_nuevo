@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Recurse -Filter \"*.php\" \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\backend\\\\src\")",
+      "Bash(Select-Object FullName)",
+      "Bash(xargs ls)"
+    ]
+  }
+}
