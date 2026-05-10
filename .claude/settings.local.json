@@ -3,7 +3,9 @@
     "allow": [
       "Bash(Get-ChildItem -Recurse -Filter \"*.php\" \"C:\\\\Users\\\\Gigabyte\\\\Documents\\\\TFGdaw\\\\backend\\\\src\")",
       "Bash(Select-Object FullName)",
-      "Bash(xargs ls)"
+      "Bash(xargs ls)",
+      "Bash(xargs grep -l \"upload\\\\|avatar\\\\|image\\\\|cover\" -i)",
+      "Bash(xargs ls -la)"
     ]
   }
 }

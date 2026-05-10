@@ -93,7 +93,12 @@ export default function PostCard({
     <div className="post-card">
       {/* Image */}
       <div className="post-card__img-wrap">
-        <img src={`/uploads/posts/${post.imagePath}`} alt="Post" className="post-card__img" />
+        <img
+          src={`/uploads/posts/${post.imagePath}`}
+          alt="Post"
+          className="post-card__img"
+          onError={e => { (e.currentTarget as HTMLImageElement).style.opacity = '0' }}
+        />
         {canDelete && (
           <button className="post-card__delete-btn" onClick={() => setConfirmDelete(true)} title="Eliminar post">
             <Trash2 size={14} />

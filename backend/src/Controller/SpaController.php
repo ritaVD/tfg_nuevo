@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 class SpaController extends AbstractController
 {
-    #[Route('/{any}', name: 'spa_fallback', requirements: ['any' => '^(?!api/).*'], priority: -10)]
+    #[Route('/{any}', name: 'spa_fallback', requirements: ['any' => '^(?!api/|uploads/).*'], priority: -10)]
     public function index(): Response
     {
         $indexPath = $this->getParameter('kernel.project_dir') . '/public/app/index.html';
