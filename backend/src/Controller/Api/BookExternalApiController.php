@@ -95,39 +95,24 @@ class BookExternalApiController extends AbstractController
         if ($filter !== '') $query['filter'] = $filter;
         if ($apiKey)        $query['key'] = $apiKey;
 
-        $requestOptions = [
-            'query'   => $query,
-            'headers' => ['Accept' => 'application/json'],
-            'timeout' => 8,
-        ];
+        try {
+            $resp = $this->httpClient->request('GET', 'https://www.googleapis.com/books/v1/volumes', [
+                'query'   => $query,
+                'headers' => ['Accept' => 'application/json'],
+                'timeout' => 15,
+            ]);
 
-        $raw = null;
-        $attempts = 0;
-        $fallbackReason = null;
-
-        while ($attempts < 2 && $raw === null) {
-            $attempts++;
-            try {
-                $resp = $this->httpClient->request('GET', 'https://www.googleapis.com/books/v1/volumes', $requestOptions);
-                $status = $resp->getStatusCode();
-
-                if ($status === 429) {
-                    $fallbackReason = 'rate_limited';
-                    break;
-                }
-                if ($status >= 400) {
-                    if ($attempts < 2) { usleep(600_000); continue; }
-                    break;
-                }
-
-                $raw = $resp->toArray(false);
-            } catch (\Throwable) {
-                if ($attempts < 2) { usleep(600_000); }
+            if ($resp->getStatusCode() === 429) {
+                return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit, 'rate_limited');
             }
-        }
 
-        if ($raw === null) {
-            return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit, $fallbackReason ?? 'unavailable');
+            if ($resp->getStatusCode() >= 400) {
+                return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit);
+            }
+
+            $raw = $resp->toArray(false);
+        } catch (\Throwable) {
+            return $this->buildFallbackResponse($q ?: $title ?: $author, $page, $limit);
         }
 
         // --------- 4) Normalizar y filtrar por popularidad ----------
