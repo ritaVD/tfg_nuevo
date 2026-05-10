@@ -198,8 +198,8 @@ export default function BooksPage() {
 
   const [shelves, setShelves] = useState<Shelf[]>([])
   const [drawerBook, setDrawerBook] = useState<Book | null>(null)
-  const [retrying, setRetrying] = useState(false)
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const activeSearchRef = useRef<string>('')
 
   useEffect(() => {
     if (user) {
@@ -212,30 +212,35 @@ export default function BooksPage() {
   async function doSearch(p = 1, qOverride?: string) {
     const q = qOverride ?? query
     if (!q.trim()) return
+
+    const searchId = `${q}:${p}`
+    activeSearchRef.current = searchId
+
     setLoading(true)
     setError('')
     setFallback(false)
     setFallbackReason(null)
-    setRetrying(false)
     setSearched(true)
     if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
-    try {
-      const res = await booksApi.search({ q, page: p, limit: 12 })
-      setBooks(res.results)
-      setPage(res.page)
-      setTotal(res.total)
-      setFallback(res.fallback ?? false)
-      setFallbackReason(res.fallbackReason ?? null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al buscar libros')
-      setRetrying(true)
-      retryTimerRef.current = setTimeout(() => {
-        setRetrying(false)
-        doSearch(p, qOverride)
-      }, 2000)
-    } finally {
-      setLoading(false)
+
+    const attempt = async (): Promise<void> => {
+      if (activeSearchRef.current !== searchId) return
+      try {
+        const res = await booksApi.search({ q, page: p, limit: 12 })
+        if (activeSearchRef.current !== searchId) return
+        setBooks(res.results)
+        setPage(res.page)
+        setTotal(res.total)
+        setFallback(res.fallback ?? false)
+        setFallbackReason(res.fallbackReason ?? null)
+        setLoading(false)
+      } catch {
+        if (activeSearchRef.current !== searchId) return
+        retryTimerRef.current = setTimeout(attempt, 2500)
+      }
     }
+
+    attempt()
   }
 
   function handleSubmit(e: FormEvent) {
