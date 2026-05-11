@@ -349,18 +349,29 @@
    RESPONSIVE — books
    ============================================================ */
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .book-grid {
-    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .book-grid {
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 1rem;
   }
 }
 @media (max-width: 480px) {
+  .book-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
   .bm-backdrop { align-items: flex-end; }
   .bm-box {
     width: 100%;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    max-height: 85vh;
+    max-height: 85dvh;
   }
 }
 

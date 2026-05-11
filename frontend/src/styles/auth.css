@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px - env(safe-area-inset-top, 0px));
   background:
     radial-gradient(ellipse 70% 60% at 25% 40%, rgba(124,58,237,0.25) 0%, transparent 60%),
     radial-gradient(ellipse 55% 70% at 80% 70%, rgba(168,85,247,0.14) 0%, transparent 60%),

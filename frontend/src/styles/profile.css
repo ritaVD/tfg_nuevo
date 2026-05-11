@@ -982,24 +982,9 @@ a.post-comment__name--link:hover { color: var(--color-primary-hover); text-decor
   }
 
   .profile-avatar-card {
-    max-width: 420px;
+    max-width: 480px;
     margin: 0 auto;
     width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .profile-layout {
-    padding: 1rem;
-    gap: 1.25rem;
-  }
-
-  .user-search-card {
-    flex-wrap: wrap;
-  }
-
-  .user-search-card__info {
-    flex: 1 1 calc(100% - 70px);
   }
 }
 
@@ -1010,11 +995,25 @@ a.post-comment__name--link:hover { color: var(--color-primary-hover); text-decor
 }
 
 @media (max-width: 480px) {
+  .profile-layout {
+    padding: 1rem;
+    gap: 1.25rem;
+  }
+
   .profile-avatar-card {
     padding: 1.75rem 1.25rem;
+    max-width: 100%;
   }
 
   .profile-section__body {
     padding: 1rem;
+  }
+
+  .user-search-card {
+    flex-wrap: wrap;
+  }
+
+  .user-search-card__info {
+    flex: 1 1 calc(100% - 70px);
   }
 }

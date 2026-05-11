@@ -1244,11 +1244,12 @@ a.request-item__name--link:hover { color: var(--color-accent); text-decoration: 
   .bm-box {
     width: 100%;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    max-height: 92vh;
+    max-height: 92dvh;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .bm-backdrop {
