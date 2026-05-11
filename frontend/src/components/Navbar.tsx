@@ -452,7 +452,7 @@ export default function Navbar() {
                 </div>
               </>
             ) : (
-              <>
+              <div className="navbar__auth">
                 <Link to="/login" className="btn btn-ghost btn-sm">
                   <LogIn size={14} />
                   Entrar
@@ -461,7 +461,7 @@ export default function Navbar() {
                   <UserPlus size={14} />
                   Registrarse
                 </Link>
-              </>
+              </div>
             )}
 
             {/* Mobile hamburger */}

@@ -782,18 +782,16 @@
 
 /* ── Touch targets mínimos en móvil ── */
 @media (max-width: 900px) {
-  .navbar__hamburger {
-    min-width: 44px;
-    min-height: 44px;
-  }
-
   .navbar__mobile-link {
     min-height: 44px;
   }
+}
 
-  .notif-bell__btn {
-    min-width: 44px;
-    min-height: 44px;
+/* ── En móvil (<640px) los botones de auth desaparecen del navbar
+      (ya están dentro del menú hamburguesa) ── */
+@media (max-width: 640px) {
+  .navbar__auth {
+    display: none;
   }
 }
 
